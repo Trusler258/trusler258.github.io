@@ -21,7 +21,8 @@
 })();
 
 function raw(fn) {
-  return fn.toString().slice(15, -4);
+  var s = fn.toString();
+  return s.slice(s.indexOf('/*') + 2, s.lastIndexOf('*/'));
 }
 
 var articles = [
@@ -1851,6 +1852,1515 @@ ax.pie(weather_counts.values, labels=weather_counts.index, autopct='%1.1f%%', st
 13. **Matplotlib 中文字体：头两行必须写 `font.sans-serif` 配置**
 14. **截图只截关键区域**，整屏截考官看不清细节
 */})
+,
+  /* ---- 3: Python 入门 ---- */
+  raw(function(){/*
+# Python 入门教程
+
+Python 由 Guido van Rossum 于 1991 年发布，设计哲学是"优雅、明确、简单"。2024 年起它长期霸榜 TIOBE，是数据科学、人工智能、自动化运维、Web 后端的首选语言之一。
+
+## 为什么学 Python
+
+- **语法接近自然语言**：用缩进表示代码块，读起来像伪代码
+- **生态庞大**：PyPI 上有 50 万+ 第三方库，几乎想要的都有
+- **跨平台**：Windows / Linux / macOS 一套代码通吃
+- **胶水语言**：能轻松调用 C / C++ / Fortran 写的高性能模块
+
+> [!TIP]
+> 新手最大误区：Python 2 已在 2020 年停止维护。请务必安装 **Python 3.10 及以上**版本。
+
+## 环境搭建
+
+### 安装解释器
+
+Windows 去 python.org 下载安装包，安装时**务必勾选 Add Python to PATH**。macOS 用 `brew install python`，Linux 用系统包管理器。
+
+验证：
+
+```bash
+python --version
+pip --version
+```
+
+### 虚拟环境（强烈建议）
+
+每个项目用独立环境，避免不同项目的库版本互相冲突：
+
+```bash
+python -m venv venv
+# Windows 激活
+venv\Scripts\activate
+# macOS / Linux 激活
+source venv/bin/activate
+# 退出环境
+deactivate
+```
+
+### 第一个程序
+
+新建 `hello.py`：
+
+```python
+print("Hello, World!")
+```
+
+运行：
+
+```bash
+python hello.py
+```
+
+> [!NOTE]
+> 也可以用交互式解释器（REPL）：终端输入 `python` 回车，直接敲代码即时看到结果，非常适合做小实验。退出按 `Ctrl+Z`(Win) / `Ctrl+D`(Mac)。
+
+## 基础语法
+
+### 注释
+
+```python
+# 这是单行注释
+
+# 没有真正的多行注释语法，用多个 # 或三引号字符串代替
+"""
+这是一段
+跨行的说明文字
+"""
+```
+
+### 变量与类型
+
+Python 是**动态类型**语言，变量不需要声明类型，第一次赋值就确定了：
+
+```python
+name = "Trusler"      # 字符串 str
+age = 20              # 整数 int
+height = 1.75         # 浮点数 float
+is_student = True     # 布尔 bool
+nothing = None        # 空值，相当于其他语言的 null
+
+print(type(age))      # <class 'int'>
+```
+
+> [!WARNING]
+> Python 里变量只是"贴在对象上的名字"。`a = b` 之后如果修改 `b` 指向的**可变对象**（如列表），`a` 看到的内容也会变，因为它们指向同一个对象。
+
+### 运算符
+
+| 类型 | 符号 | 示例 |
+|---|---|---|
+| 算术 | `+ - * / // % **` | `7 // 2 = 3`（整除），`2 ** 3 = 8`（幂） |
+| 比较 | `== != > < >= <=` | 返回 bool |
+| 逻辑 | `and or not` | `True and False` |
+| 成员 | `in` | `"a" in "abc"` 为 True |
+| 身份 | `is` | 判断是不是同一个对象（慎用 ==） |
+
+### 字符串
+
+```python
+s = "hello"
+print(s.upper())               # HELLO
+print(s.capitalize())          # Hello
+print(len(s))                  # 5
+print(s[0], s[-1])             # h o（负索引从末尾往前）
+print("a" + "b")               # ab（拼接）
+print("-".join(["a", "b"]))    # a-b
+
+# f-string 是最推荐的格式化方式
+name = "Trusler"
+print(f"你好，{name}，明年 {age + 1} 岁")
+```
+
+> [!TIP]
+> 字符串本身不可变。想修改要先转成列表或重新赋值。格式化优先用 f-string，比老式的 `%` 和 `.format()` 清晰得多。
+
+## 数据结构
+
+### 列表 list（可变、有序）
+
+```python
+lst = [1, 2, 3]
+lst.append(4)                  # [1, 2, 3, 4]
+lst.insert(0, 0)               # [0, 1, 2, 3, 4]
+lst.remove(2)                  # 删除第一个值为 2 的元素
+print(lst[1:3])                # 切片，得到 [1, 2]
+print(lst[-1])                 # 取最后一个
+for i, v in enumerate(lst):
+    print(i, v)                # 带索引遍历
+```
+
+### 元组 tuple（不可变、有序）
+
+```python
+t = (1, "a", True)
+# t[0] = 2  # 报错，元组不能修改
+# 常用于让函数一次返回多个值
+def minmax(nums):
+    return min(nums), max(nums)
+lo, hi = minmax([3, 1, 4])
+```
+
+### 字典 dict（键值对）
+
+```python
+d = {"name": "Trusler", "age": 20}
+print(d["name"])               # Trusler
+d["age"] = 21                  # 修改已有键
+d["city"] = "BJ"               # 新增键值对
+for k, v in d.items():
+    print(k, v)
+```
+
+### 集合 set（自动去重、无序）
+
+```python
+s = {1, 2, 2, 3}               # {1, 2, 3} 自动去重
+s.add(4)
+print(s & {2, 4})              # 交集 {2, 4}
+```
+
+## 控制流
+
+```python
+score = 85
+if score >= 90:
+    print("A")
+elif score >= 60:
+    print("及格")
+else:
+    print("挂科")
+
+for i in range(5):             # 0 1 2 3 4
+    print(i)
+
+n = 3
+while n > 0:
+    print(n)
+    n -= 1
+
+# 列表推导式：Python 的特色语法
+squares = [x * x for x in range(10) if x % 2 == 0]
+```
+
+> [!TIP]
+> 能用列表推导式就别写啰嗦的 for 循环，但**不要嵌套超过两层**，否则可读性反而下降。
+
+## 函数
+
+```python
+def greet(name, msg="你好"):           # msg 是默认参数
+    return f"{msg}，{name}"
+
+print(greet("Trusler"))
+print(greet("Tom", "Hi"))
+
+def total(*nums):                      # *nums 收集为元组
+    return sum(nums)
+
+def show(**kw):                        # **kw 收集为字典
+    for k, v in kw.items():
+        print(k, v)
+
+double = lambda x: x * 2               # lambda 匿名函数
+print(double(5))
+
+counter = 0
+def inc():
+    global counter                     # 改全局变量要先声明
+    counter += 1
+```
+
+## 异常处理
+
+```python
+try:
+    x = int(input("输入数字："))
+    print(10 / x)
+except ValueError:
+    print("不是合法数字")
+except ZeroDivisionError:
+    print("不能除以 0")
+else:
+    print("正常完成，没有异常")
+finally:
+    print("无论有没有异常都会执行")
+
+if age < 0:
+    raise ValueError("年龄不能为负")    # 主动抛异常
+```
+
+## 文件操作
+
+```python
+# 写文件
+with open("note.txt", "w", encoding="utf-8") as f:
+    f.write("你好\n世界")
+
+# 按行读
+with open("note.txt", "r", encoding="utf-8") as f:
+    for line in f:
+        print(line.strip())
+
+# 一次性读全部
+content = open("note.txt", encoding="utf-8").read()
+```
+
+> [!WARNING]
+> 永远用 `with open(...)` 上下文管理器。它会在代码块结束时**自动关闭文件**，忘记 `close()` 可能导致数据没真正写进磁盘。
+
+## 常用标准库
+
+| 库 | 用途 | 例子 |
+|---|---|---|
+| `os` / `pathlib` | 文件路径、目录操作 | `os.listdir(".")` |
+| `sys` | 命令行参数 | `sys.argv` |
+| `datetime` | 日期时间 | `datetime.now()` |
+| `json` | JSON 读写 | `json.dumps(obj)` |
+| `random` | 随机数 | `random.randint(1, 6)` |
+| `math` | 数学函数 | `math.sqrt(16)` |
+| `collections` | 高级容器 | `Counter`, `defaultdict` |
+
+## 实战项目：学生成绩管理系统
+
+做一个命令行小系统，支持录入学生、查看排行榜、把数据保存到文件。
+
+### 需求拆解
+
+1. 用列表存学生字典 `{"name": 名字, "scores": [成绩列表]}`
+2. 录入：输入姓名和若干门成绩
+3. 统计：算平均分、最高分
+4. 排序：按平均分从高到低
+5. 持久化：用 json 存到 `students.json`
+
+### 参考答案
+
+```python
+import json
+
+FILE = "students.json"
+
+def load():
+    try:
+        with open(FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+def save(students):
+    with open(FILE, "w", encoding="utf-8") as f:
+        json.dump(students, f, ensure_ascii=False, indent=2)
+
+def add(students):
+    name = input("姓名：")
+    n = int(input("几门课："))
+    scores = [float(input(f"第{i + 1}门：")) for i in range(n)]
+    students.append({"name": name, "scores": scores})
+    print(f"已录入 {name}")
+
+def avg(s):
+    return sum(s["scores"]) / len(s["scores"])
+
+def show(students):
+    if not students:
+        print("暂无数据")
+        return
+    ranked = sorted(students, key=avg, reverse=True)
+    for s in ranked:
+        print(f"{s['name']:8} 平均 {avg(s):.1f} 最高 {max(s['scores'])}")
+
+def main():
+    students = load()
+    while True:
+        print("\n1 录入  2 查看  3 退出")
+        c = input("选择：")
+        if c == "1":
+            add(students)
+            save(students)
+        elif c == "2":
+            show(students)
+        elif c == "3":
+            break
+
+if __name__ == "__main__":
+    main()
+```
+
+> [!NOTE]
+> `if __name__ == "__main__":` 保证只有直接运行脚本时才执行 `main()`，被别的文件 import 时不会自动跑。这是 Python 项目的标准写法。
+
+## 课后练习
+
+1. 给系统加"按姓名删除学生"功能
+2. 把平均分直接存进每个学生字典，避免每次都重新计算
+3. 用 `csv` 模块把成绩导出成表格文件
+*/}),
+
+  /* ---- 4: Java 入门 ---- */
+  raw(function(){/*
+# Java 入门教程
+
+Java 由 Sun 公司（后并入 Oracle）在 1995 年发布，核心理念是"一次编写，到处运行"（WORA）。它运行在 JVM 虚拟机上，是企业级后端、Android、大数据生态的绝对主力。
+
+## 为什么学 Java
+
+- **强类型 + 编译型**：编译阶段就帮你抓出大量错误
+- **JVM 跨平台**：编译成字节码，任何装了 JVM 的系统都能跑
+- **生态成熟**：Spring、Hadoop、Flink 都是 Java 系
+- **就业面广**：银行、电商、大厂后端大量招聘 Java 工程师
+
+> [!TIP]
+> 2026 年主流用 **Java 17（LTS）** 或 **Java 21（LTS）**。装 JDK 时认准 LTS 长期支持版，别追最新的非 LTS 版本。
+
+## 环境搭建
+
+### 安装 JDK
+
+去 Oracle 或 Adoptium 下载 JDK 17+，配置好 `JAVA_HOME` 并把它加进 PATH。
+
+```bash
+java -version
+javac -version
+```
+
+### 第一个程序
+
+Java 强制**类名与文件名一致**，而且程序从 `main` 方法启动：
+
+```java
+public class Hello {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+```
+
+编译并运行：
+
+```bash
+javac Hello.java     # 生成 Hello.class 字节码
+java Hello           # 由 JVM 运行
+```
+
+> [!WARNING]
+> 文件名必须是 `Hello.java`，类名必须是 `Hello`，否则 `javac` 直接报错。这是 Java 新手遇到的第一个坑。
+
+## 基础语法
+
+### 变量与类型
+
+Java 是**静态强类型**语言，变量必须声明类型：
+
+```java
+int age = 20;                 // 整数
+double price = 9.9;          // 双精度浮点
+boolean flag = true;         // 布尔
+char c = 'A';                // 单个字符
+String name = "Trusler";     // 字符串，注意 S 大写
+long big = 1000000000L;      // long 类型要加 L
+```
+
+| 类型 | 位数 | 范围 |
+|---|---|---|
+| `int` | 32 | 约 -21 亿到 21 亿 |
+| `long` | 64 | 更大 |
+| `double` | 64 | 小数 |
+| `float` | 32 | 小数（字面量加 F） |
+
+> [!NOTE]
+> `String` 是对象，不是基本类型。Java 有 8 个基本类型：byte short int long float double boolean char。
+
+### 运算符
+
+```java
+int a = 10, b = 3;
+System.out.println(a / b);        // 3（整数除法会截断小数）
+System.out.println(a % b);        // 1（取余）
+System.out.println(a == b);       // false
+boolean t = a > 5 && b < 10;      // 逻辑与
+```
+
+### 字符串
+
+```java
+String s = "hello";
+System.out.println(s.length());           // 5
+System.out.println(s.toUpperCase());      // HELLO
+System.out.println(s.equals("hello"));    // true（比较内容用 equals）
+System.out.println(s.substring(1, 3));    // el
+System.out.println("a" + 1 + 2);          // a12（字符串拼接）
+```
+
+> [!WARNING]
+> 字符串比较**必须用 `.equals()`**。用 `==` 比的是内存地址，绝大多数情况下会得到 false。这是第二大坑。
+
+## 控制流
+
+```java
+int score = 85;
+if (score >= 90) {
+    System.out.println("A");
+} else if (score >= 60) {
+    System.out.println("及格");
+} else {
+    System.out.println("挂科");
+}
+
+for (int i = 0; i < 5; i++) {
+    System.out.println(i);
+}
+
+int n = 3;
+while (n > 0) {
+    System.out.println(n);
+    n--;
+}
+
+// 增强 for：遍历数组或集合
+int[] arr = {1, 2, 3};
+for (int x : arr) {
+    System.out.println(x);
+}
+
+switch (score / 10) {
+    case 10:
+    case 9:  System.out.println("A"); break;
+    case 8:  System.out.println("B"); break;
+    default: System.out.println("其他");
+}
+```
+
+## 数组与集合
+
+```java
+// 数组：长度固定，创建后不能改大小
+int[] nums = new int[3];
+nums[0] = 1;
+int[] a2 = {1, 2, 3};
+
+// ArrayList：动态数组，日常最常用
+import java.util.ArrayList;
+ArrayList<String> list = new ArrayList<>();
+list.add("Tom");
+list.add("Jerry");
+list.remove(0);
+for (String s : list) System.out.println(s);
+
+// HashMap：键值对
+import java.util.HashMap;
+HashMap<String, Integer> map = new HashMap<>();
+map.put("age", 20);
+System.out.println(map.get("age"));
+```
+
+> [!TIP]
+> 实际开发几乎都用 `ArrayList` / `HashMap` 这类集合类，而不是原生数组。记得在文件顶部 `import java.util.*;`。
+
+## 函数（方法）
+
+```java
+static int add(int x, int y) {
+    return x + y;
+}
+
+// 方法重载：同名不同参数列表
+static double add(double x, double y) {
+    return x + y;
+}
+
+// 可变参数
+static int sum(int... nums) {
+    int t = 0;
+    for (int n : nums) t += n;
+    return t;
+}
+```
+
+## 面向对象
+
+Java 是纯面向对象语言，一切皆对象（8 个基本类型除外）。
+
+```java
+class Student {
+    String name;
+    int age;
+
+    Student(String name, int age) {     // 构造方法
+        this.name = name;
+        this.age = age;
+    }
+
+    void study() {
+        System.out.println(name + " 在学习");
+    }
+}
+
+// 继承
+class Graduate extends Student {
+    String mentor;
+    Graduate(String n, int a, String m) {
+        super(n, a);                     // 调用父类构造
+        this.mentor = m;
+    }
+}
+
+Student s = new Student("Trusler", 20);
+s.study();
+```
+
+三大特性：
+
+- **封装**：用 `private` 隐藏字段，提供 `getter / setter`
+- **继承**：用 `extends` 复用父类代码
+- **多态**：父类引用指向子类对象，运行时调用子类重写的方法
+
+> [!NOTE]
+> `this` 指当前对象，`super` 指父类。`static` 方法属于类而不是对象，不能访问非 static 成员。
+
+## 异常处理
+
+```java
+try {
+    int x = Integer.parseInt("abc");
+} catch (NumberFormatException e) {
+    System.out.println("格式错误：" + e.getMessage());
+} finally {
+    System.out.println("无论怎样都会执行");
+}
+
+// 主动抛出异常
+if (age < 0) throw new IllegalArgumentException("年龄非法");
+```
+
+## 文件操作
+
+```java
+import java.nio.file.*;
+import java.util.List;
+
+// 写文件（一行一个元素）
+Files.write(Paths.get("note.txt"),
+    List.of("你好", "世界"),
+    StandardCharsets.UTF_8);
+
+// 读文件
+List<String> lines = Files.readAllLines(
+    Paths.get("note.txt"), StandardCharsets.UTF_8);
+```
+
+> [!TIP]
+> 新项目直接用 `java.nio.file.Files`，比老式的 `FileInputStream` 简洁十倍。
+
+## 实战项目：命令行通讯录
+
+用 `HashMap` 存姓名到电话的映射，支持增、查、删，并把数据持久化到文件。
+
+### 参考答案
+
+```java
+import java.io.*;
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class PhoneBook {
+    static HashMap<String, String> pb = new HashMap<>();
+    static String FILE = "phonebook.txt";
+    static Scanner sc = new Scanner(System.in);
+
+    static void load() {
+        try (BufferedReader br = new BufferedReader(new FileReader(FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] p = line.split(",");
+                pb.put(p[0], p[1]);
+            }
+        } catch (IOException e) { }
+    }
+
+    static void save() {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(FILE))) {
+            for (var e : pb.entrySet())
+                pw.println(e.getKey() + "," + e.getValue());
+        } catch (IOException e) { }
+    }
+
+    public static void main(String[] args) {
+        load();
+        while (true) {
+            System.out.print("\n1 增 2 查 3 删 4 退出 > ");
+            String c = sc.nextLine();
+            if (c.equals("1")) {
+                System.out.print("姓名："); String n = sc.nextLine();
+                System.out.print("电话："); String t = sc.nextLine();
+                pb.put(n, t); save();
+            } else if (c.equals("2")) {
+                System.out.print("姓名："); String n = sc.nextLine();
+                System.out.println(n + " -> " + pb.getOrDefault(n, "未找到"));
+            } else if (c.equals("3")) {
+                System.out.print("姓名："); pb.remove(sc.nextLine()); save();
+            } else break;
+        }
+    }
+}
+```
+
+## 课后练习
+
+1. 加一个"列出全部联系人"的功能
+2. 改成用 `ArrayList` 存对象（包含姓名、电话、邮箱）
+3. 用 `Properties` 类重写存储逻辑
+*/}),
+
+  /* ---- 5: C++ 入门 ---- */
+  raw(function(){/*
+# C++ 入门教程
+
+C++ 由 Bjarne Stroustrup 在 1979 年基于 C 语言扩展而来，加入了类、模板和 STL 标准库。它奉行"零成本抽象"，直接贴近硬件，是游戏引擎、操作系统、高频交易、嵌入式开发的不二之选。
+
+## 为什么学 C++
+
+- **性能极致**：直接管理内存，没有垃圾回收的停顿
+- **底层可控**：指针、内存布局随心所欲
+- **应用极广**：Unreal 引擎、Chrome、MySQL，连 STL 本身都是 C++ 写的
+- **打基础**：学完 C++ 再看 Java / Go，会觉得它们简单很多
+
+> [!WARNING]
+> C++ 能力越大责任越大。内存泄漏、野指针、段错误是三大经典坑。新手一定要从 RAII 和智能指针开始，养成好习惯。
+
+## 环境搭建
+
+### 安装编译器
+
+- Windows：装 **MinGW-w64** 或装 Visual Studio 自带的 **MSVC**
+- macOS：`xcode-select --install` 或 `brew install gcc`
+- Linux：`sudo apt install g++`
+
+验证：
+
+```bash
+g++ --version
+```
+
+### 第一个程序
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "Hello, World!" << endl;
+    return 0;
+}
+```
+
+编译运行：
+
+```bash
+g++ hello.cpp -o hello
+./hello
+```
+
+> [!TIP]
+> `cout <<` 是输出，`cin >>` 是输入，`<< endl` 相当于换行。C++ 用"流（stream）"而不是 print 函数来做输入输出。
+
+## 基础语法
+
+### 变量与类型
+
+```cpp
+int age = 20;              // 整数
+double price = 9.9;        // 双精度浮点
+float f = 1.5f;            // 单精度要加 f
+bool ok = true;            // 布尔
+char c = 'A';              // 单个字符
+string name = "Trusler";   // 字符串（需 #include <string>）
+const int MAX = 100;       // 常量，不可改
+auto x = 3.14;             // 让编译器自动推导类型
+```
+
+| 类型 | 字节 | 说明 |
+|---|---|---|
+| `int` | 4 | 默认整数 |
+| `long long` | 8 | 更大的整数 |
+| `double` | 8 | 默认浮点 |
+| `char` | 1 | 字符 |
+
+### 运算符
+
+```cpp
+int a = 10, b = 3;
+cout << a / b << endl;          // 3（整数除法截断）
+cout << a % b << endl;          // 1（取余）
+cout << (a > 5 && b < 10) << endl;   // 1（逻辑与，true 输出为 1）
+a += 2;                         // 等价于 a = a + 2
+```
+
+### 字符串
+
+```cpp
+#include <string>
+string s = "hello";
+cout << s.length() << endl;     // 5
+cout << s.substr(1, 3) << endl; // ell（从索引1取3个字符）
+s += " world";
+cout << s << endl;
+```
+
+> [!NOTE]
+> C 风格字符串是 `char` 数组，而 C++ 的 `std::string` 好用得多，请优先用 `string`。
+
+## 控制流
+
+```cpp
+int score = 85;
+if (score >= 90) cout << "A";
+else if (score >= 60) cout << "及格";
+else cout << "挂科";
+
+for (int i = 0; i < 5; i++) cout << i;
+
+int n = 3;
+while (n > 0) { cout << n; n--; }
+
+// 范围 for（C++11 起）
+for (char ch : s) cout << ch;
+
+switch (score / 10) {
+    case 9: case 10: cout << "A"; break;
+    default: cout << "其他";
+}
+```
+
+## 数组与 STL 容器
+
+```cpp
+#include <vector>
+#include <map>
+#include <set>
+using namespace std;
+
+vector<int> v = {1, 2, 3};      // 动态数组
+v.push_back(4);
+for (int x : v) cout << x;
+
+map<string, int> m;             // 红黑树实现的键值对
+m["age"] = 20;
+cout << m["age"];
+
+set<int> s = {3, 1, 2};         // 自动排序并去重
+```
+
+> [!TIP]
+> STL 是 C++ 的灵魂：`vector` / `map` / `set` / `unordered_map` 几乎覆盖所有需求。别自己手搓链表和哈希表。
+
+## 函数
+
+```cpp
+int add(int x, int y) {
+    return x + y;
+}
+
+// 引用传参：避免拷贝，还能修改原值
+void swap(int& a, int& b) {
+    int t = a; a = b; b = t;
+}
+
+// 默认参数
+void log(string msg, int level = 1) { }
+
+// 函数重载
+double add(double x, double y) { return x + y; }
+
+// Lambda 匿名函数（C++11 起）
+auto square = [](int x) { return x * x; };
+```
+
+## 面向对象
+
+```cpp
+class Student {
+private:
+    string name;
+    int age;
+public:
+    Student(string n, int a) : name(n), age(a) {}   // 初始化列表
+    void study() { cout << name << " 学习" << endl; }
+    int getAge() { return age; }
+};
+
+class Graduate : public Student {        // 公有继承
+    string mentor;
+public:
+    Graduate(string n, int a, string m) : Student(n, a), mentor(m) {}
+};
+
+Student s("Trusler", 20);
+s.study();
+```
+
+> [!NOTE]
+> 冒号后面是初始化列表，比在构造函数体里逐个赋值更高效。封装用 `private`，继承用 `: public`。
+
+## 内存与指针（重点）
+
+```cpp
+int x = 10;
+int* p = &x;              // p 保存 x 的地址
+cout << *p << endl;      // 解引用，输出 10
+
+// new / delete：手动管理内存
+int* q = new int(5);
+delete q;                // 必须手动释放，否则内存泄漏
+
+// 现代 C++：智能指针（推荐）
+#include <memory>
+auto sp = make_shared<int>(5);    // 引用计数，自动释放
+```
+
+> [!WARNING]
+> 新手尽量用 `vector` + 智能指针，避免裸 `new / delete`。忘了 `delete` 会内存泄漏，重复 `delete` 会直接崩溃。
+
+## 异常处理
+
+```cpp
+#include <stdexcept>
+try {
+    throw runtime_error("出错了");
+} catch (const exception& e) {
+    cout << e.what() << endl;
+}
+```
+
+## 文件操作
+
+```cpp
+#include <fstream>
+ofstream out("note.txt");
+out << "你好" << endl;
+out.close();
+
+ifstream in("note.txt");
+string line;
+while (getline(in, line)) cout << line;
+in.close();
+```
+
+## 实战项目：学生成绩管理（C++ 版）
+
+用 `vector<Student>` 存学生，支持录入、按平均分排序、输出排行榜。
+
+### 参考答案
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+using namespace std;
+
+struct Student {
+    string name;
+    vector<double> scores;
+    double avg() const {
+        return scores.empty() ? 0 :
+            accumulate(scores.begin(), scores.end(), 0.0) / scores.size();
+    }
+};
+
+int main() {
+    vector<Student> stus;
+    int n;
+    cout << "学生数："; cin >> n;
+    for (int i = 0; i < n; i++) {
+        Student s;
+        cout << "姓名："; cin >> s.name;
+        int k; cout << "几门课："; cin >> k;
+        for (int j = 0; j < k; j++) {
+            double x; cin >> x; s.scores.push_back(x);
+        }
+        stus.push_back(s);
+    }
+    sort(stus.begin(), stus.end(),
+        [](const Student& a, const Student& b) { return a.avg() > b.avg(); });
+    for (auto& s : stus)
+        cout << s.name << " 平均 " << s.avg() << endl;
+    return 0;
+}
+```
+
+## 课后练习
+
+1. 加一个"按姓名查找"功能
+2. 把成绩存进文件，下次启动再读回来
+3. 用 `class` 替代 `struct`，并把字段设为私有
+*/}),
+  /* ---- 6: JavaScript 入门 ---- */
+  raw(function(){/*
+# JavaScript 入门教程
+
+JavaScript（简称 JS）由 Brendan Eich 在 1995 年仅用 10 天设计出来，原本叫 LiveScript。它是**浏览器的原生语言**，负责网页的交互。2015 年的 ES6 是一次大更新，加上 Node.js 让它能跑在服务端，如今前后端通吃。
+
+## 为什么学 JavaScript
+
+- **唯一能直接操纵网页的语言**：想做前端绕不开
+- **全栈可行**：Node.js 让你用同一门语言写后端
+- **生态爆炸**：npm 上有上百万个包
+- **上手快**：浏览器按 F12 就能写代码看效果
+
+> [!TIP]
+> 现代 JS 请直接用 ES6+ 语法（let / const / 箭头函数 / 模板字符串）。老的 `var` 和回调地狱已经是过去式。
+
+## 环境搭建
+
+### 三种运行方式
+
+1. **浏览器控制台**：按 F12 打开 DevTools，切到 Console 直接敲
+2. **Node.js**：装好 Node 后终端输入 `node` 进 REPL，或 `node app.js` 跑文件
+3. **VS Code + Live Server**：写 HTML/JS 实时刷新预览
+
+```bash
+node --version
+```
+
+### 第一个程序
+
+```javascript
+console.log("Hello, World!");
+```
+
+在网页里也可以这样写：
+
+```html
+<script>
+  alert("Hello, World!");
+</script>
+```
+
+## 基础语法
+
+### 变量声明
+
+```javascript
+let count = 0;            // 可变变量，推荐
+const PI = 3.14;          // 常量，不可重新赋值
+// var 老写法，存在变量提升坑，尽量别用
+```
+
+> [!WARNING]
+> 默认用 `const`，只有确实需要重新赋值才用 `let`。这能避免很多意外修改。
+
+### 数据类型
+
+```javascript
+let n = 42;               // number（只有这一种数字类型）
+let s = "hi";             // string
+let b = true;             // boolean
+let empty = null;         // null（空对象）
+let undef;                // undefined（未定义）
+let obj = { name: "Tom" };// object
+let big = 9007199254740993n;  // bigint（超大整数）
+
+console.log(typeof n);    // "number"
+console.log(typeof obj);  // "object"
+```
+
+### 模板字符串
+
+```javascript
+let name = "Trusler";
+let msg = `你好，${name}，今年 ${20 + 1} 岁`;   // 反引号 + ${}
+console.log(msg);
+```
+
+### 运算符
+
+```javascript
+let a = 10, b = 3;
+console.log(a / b);       // 3.333...（JS 除法保留小数）
+console.log(a % b);       // 1
+console.log(a === b);     // false（=== 严格相等，类型和值都要一样）
+console.log(a == "10");   // true（== 会做类型转换，容易出 bug）
+```
+
+> [!WARNING]
+> 永远用 `===` 和 `!==`，别用 `==` / `!=`。`==` 会偷偷做类型转换，`0 == ""` 居然是 true，坑极多。
+
+## 数据结构
+
+```javascript
+// 数组
+let arr = [1, 2, 3];
+arr.push(4);
+arr.forEach(x => console.log(x));
+
+// 对象
+let user = { name: "Tom", age: 20 };
+console.log(user.name);
+user.city = "BJ";
+
+// Map（键可以是任意类型）
+let m = new Map();
+m.set("a", 1);
+console.log(m.get("a"));
+
+// Set（去重）
+let set = new Set([1, 1, 2]);   // {1, 2}
+```
+
+## 控制流
+
+```javascript
+let score = 85;
+if (score >= 90) console.log("A");
+else if (score >= 60) console.log("及格");
+else console.log("挂科");
+
+for (let i = 0; i < 5; i++) console.log(i);
+
+let n = 3;
+while (n > 0) { console.log(n); n--; }
+
+// for...of 遍历可迭代对象
+for (let x of [1, 2, 3]) console.log(x);
+
+// for...in 遍历对象键
+for (let k in user) console.log(k);
+```
+
+## 函数
+
+```javascript
+function add(x, y) {        // 函数声明
+    return x + y;
+}
+
+const mul = (x, y) => x * y;   // 箭头函数，更简洁
+
+function greet(name = "匿名") { // 默认参数
+    return `你好，${name}`;
+}
+
+const sum = (...nums) => nums.reduce((a, b) => a + b, 0);  // rest 参数
+
+// 闭包：函数记住了外部变量
+function counter() {
+    let c = 0;
+    return () => ++c;
+}
+```
+
+> [!NOTE]
+> 箭头函数没有自己的 `this`，它继承外层 `this`。在事件回调、数组方法里特别好用。
+
+## 面向对象（ES6 class）
+
+```javascript
+class Student {
+    constructor(name, age) {
+        this.name = name;
+        this.age = age;
+    }
+    study() {
+        console.log(this.name + " 在学习");
+    }
+}
+
+class Graduate extends Student {
+    constructor(name, age, mentor) {
+        super(name, age);
+        this.mentor = mentor;
+    }
+}
+
+const s = new Student("Trusler", 20);
+s.study();
+```
+
+## DOM 基础（让网页动起来）
+
+```javascript
+// 获取元素
+let btn = document.getElementById("myBtn");
+let title = document.querySelector("h1");
+
+// 修改内容
+title.textContent = "新标题";
+
+// 绑定事件
+btn.addEventListener("click", () => {
+    alert("被点击了！");
+});
+
+// 修改样式
+btn.style.color = "red";
+```
+
+## 异步编程
+
+```javascript
+// 回调（老式）
+setTimeout(() => console.log("2 秒后"), 2000);
+
+// Promise
+fetch("/api/data")
+  .then(res => res.json())
+  .then(data => console.log(data));
+
+// async / await（推荐写法）
+async function load() {
+    let res = await fetch("/api/data");
+    let data = await res.json();
+    console.log(data);
+}
+```
+
+> [!TIP]
+> `async / await` 是把 Promise 写成同步样子的语法糖，可读性最好，优先用它。
+
+## 异常处理与常用 API
+
+```javascript
+try {
+    JSON.parse("{错误");
+} catch (e) {
+    console.log("出错：", e.message);
+}
+
+// JSON 互转
+let str = JSON.stringify({ a: 1 });
+let obj = JSON.parse(str);
+
+// 本地存储（浏览器，不会过期）
+localStorage.setItem("token", "abc");
+localStorage.getItem("token");
+```
+
+## 实战项目：待办清单 Todo
+
+一个能增删、标记完成、自动保存的网页清单。
+
+### 需求拆解
+
+1. 输入框 + 添加按钮，回车也能加
+2. 列表展示，每项带删除按钮和勾选框
+3. 勾选标记完成（加删除线样式）
+4. 用 `localStorage` 持久化，刷新不丢
+
+### 参考答案
+
+```html
+<input id="inp" placeholder="写点什么">
+<button id="add">添加</button>
+<ul id="list"></ul>
+
+<script>
+let todos = JSON.parse(localStorage.getItem("todos") || "[]");
+
+function render() {
+    const ul = document.getElementById("list");
+    ul.innerHTML = "";
+    todos.forEach((t, i) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<input type="checkbox" ${t.done ? "checked" : ""}>
+          <span style="text-decoration:${t.done ? "line-through" : "none"}">${t.text}</span>
+          <button onclick="del(${i})">删</button>`;
+        li.querySelector("input").onchange = () => {
+            todos[i].done = !todos[i].done; save(); render();
+        };
+        ul.appendChild(li);
+    });
+}
+
+function save() {
+    localStorage.setItem("todos", JSON.stringify(todos));
+}
+
+function del(i) {
+    todos.splice(i, 1); save(); render();
+}
+
+document.getElementById("add").onclick = () => {
+    const v = document.getElementById("inp").value.trim();
+    if (!v) return;
+    todos.push({ text: v, done: false });
+    document.getElementById("inp").value = "";
+    save(); render();
+};
+
+render();
+</script>
+```
+
+## 课后练习
+
+1. 加一个"清空已完成"按钮
+2. 支持双击文字编辑内容
+3. 用 `filter` 实现"只看未完成"
+*/}),
+
+  /* ---- 7: Vim / Nano 编辑器 ---- */
+  raw(function(){/*
+# Vim / Nano 编辑器实战
+
+服务器通常没有图形界面，你只能在终端里改文件。Vim 和 Nano 是两件必备武器：Nano 上手零门槛，Vim 学会之后效率极高。
+
+## 为什么必须用终端编辑器
+
+- 远程服务器没有鼠标、没有 GUI
+- `scp` 把文件下载下来改再传回去太慢
+- 应急改一行配置（比如 nginx、hosts）必须当场搞定
+
+> [!TIP]
+> 新手先掌握 Nano 应付日常，再花半天练 Vim。两者都会，你就不怕任何服务器了。
+
+## Vim：四种模式
+
+Vim 最难的是**模式**，搞清楚就不会懵：
+
+| 模式 | 进入键 | 作用 |
+|---|---|---|
+| Normal（普通） | `Esc` | 移动光标、执行命令，默认模式 |
+| Insert（插入） | `i` / `a` / `o` | 真正打字输入内容 |
+| Visual（可视） | `v` / `V` / `Ctrl+v` | 选中文本块 |
+| Command（命令） | `:` | 底部输入 `:w` `:q` 等指令 |
+
+### 启动与退出
+
+```bash
+vim note.txt          # 打开（不存在则新建）
+```
+
+进入后默认是 Normal 模式，常用退出命令：
+
+| 命令 | 含义 |
+|---|---|
+| `:w` | 保存（write） |
+| `:q` | 退出（quit） |
+| `:wq` 或 `:x` | 保存并退出 |
+| `:q!` | 不保存，强制退出 |
+
+> [!WARNING]
+> 直接关终端窗口不会保存！一定要先 `:wq`。新手卡在 Vim 里出不去，记住 `Esc` 然后 `:q!` 就能强制离开。
+
+### 移动光标（Normal 模式）
+
+```vim
+h j k l          # 左 下 上 右（右手放在键盘上就能按）
+w b             # 跳到下一个 / 上一个单词开头
+0 ^ $           # 行首 / 首个非空字符 / 行尾
+gg G            # 文件第一行 / 最后一行
+Ctrl+f Ctrl+b   # 向下 / 向上翻一页
+```
+
+### 编辑文本
+
+```vim
+i a             # 在光标前 / 后插入
+o O             # 在下方 / 上方新建一行并插入
+x              # 删除光标处字符
+dw             # 删除一个单词
+dd             # 删除（剪切）整行
+u Ctrl+r        # 撤销 / 重做
+```
+
+### 复制粘贴
+
+```vim
+yy             # 复制整行
+yw             # 复制一个单词
+p              # 粘贴到光标后
+```
+
+### 搜索与替换
+
+```vim
+/pattern       # 向下搜索，按 n 下一个，N 上一个
+?pattern       # 向上搜索
+:%s/old/new/g  # 全局把 old 替换成 new
+```
+
+### 可视模式选中
+
+```vim
+v              # 字符级选中
+V              # 行级选中
+Ctrl+v         # 列块选中（批量改多行前缀很好用）
+```
+
+### 个人配置 ~/.vimrc
+
+```vim
+set number          " 显示行号
+set tabstop=4       " Tab 宽度 4
+set expandtab       " Tab 自动转空格
+set mouse=a         " 启用鼠标
+syntax on           " 语法高亮
+```
+
+## Nano：开箱即用
+
+Nano 没有模式概念，打开就能打字，底部有一排快捷键提示。
+
+### 启动
+
+```bash
+nano note.txt
+```
+
+### 常用快捷键（^ 代表 Ctrl）
+
+| 快捷键 | 作用 |
+|---|---|
+| `Ctrl+O` | 保存（Write Out） |
+| `Ctrl+X` | 退出（Exit） |
+| `Ctrl+K` | 剪切当前行 |
+| `Ctrl+U` | 粘贴 |
+| `Ctrl+W` | 搜索 |
+| `Ctrl+G` | 查看全部帮助 |
+| `Ctrl+_` | 跳转到指定行号 |
+
+> [!NOTE]
+> Nano 退出时如果没保存，会问你要不要保存，按 `Y` 确认、`Enter` 确认文件名即可。比 Vim 友好太多。
+
+### 个人配置 ~/.nanorc
+
+```bash
+set linenumbers        # 显示行号
+set tabsize 4          # Tab 宽度
+set mouse              # 启用鼠标
+```
+
+## 两者怎么选
+
+| 场景 | 推荐 |
+|---|---|
+| 改一两行配置、赶时间 | Nano |
+| 长时间写代码、大量编辑 | Vim |
+| 完全新手第一次上服务器 | Nano |
+
+> [!TIP]
+> 紧急改配置（比如修复一个写错的 nginx .conf 导致服务起不来），用 `nano 文件名` 最稳，避免 Vim 模式切换手忙脚乱。
+*/}),
+
+  /* ---- 8: 代码风格与规范 ---- */
+  raw(function(){/*
+# 代码风格与规范
+
+代码是写给人看的，顺便让机器执行。统一的风格能让团队协作顺畅、bug 更少、维护更轻松。
+
+## 为什么风格重要
+
+- **可读性**：你三个月后看自己代码，像看别人的
+- **协作**：10 个人 10 种风格，PR 里全是格式争吵
+- **减少 bug**：一致的结构让异常更容易被发现
+- **工具化**：有了规范，格式化、检查都能自动化
+
+> [!TIP]
+> 风格之争（tab vs space、单引号 vs 双引号）没有绝对对错，关键是**整个项目统一**。用工具强制执行比靠自觉靠谱。
+
+## 命名规范
+
+| 目标 | 风格 | 示例 |
+|---|---|---|
+| 变量 / 函数 | camelCase | `userName`, `getScore()` |
+| 类 / 构造函数 | PascalCase | `Student`, `HttpClient` |
+| 常量 | UPPER_SNAKE | `MAX_RETRY`, `API_URL` |
+| 私有成员 | 前缀 `_` | `_cache`, `_init()` |
+
+核心原则：**见名知意**，别用 `a` `tmp` `data1` 这种含糊名字。
+
+```python
+# 坏
+def p(u, d):
+    ...
+
+# 好
+def calculate_average(user, scores):
+    ...
+```
+
+## 缩进与格式
+
+- **缩进用空格**，别混用 Tab 和空格（混用会报缩进错误）
+- Python 强制 4 空格；前端大多 2 空格；Java/C++ 多 4 空格或 2
+- **一行别太长**：建议 80-120 字符，超了换行
+- 运算符前后、逗号后加空格，眼睛更舒服
+
+```javascript
+// 坏：挤在一行
+if(x>0){doSomething(x);}
+
+// 好
+if (x > 0) {
+    doSomething(x);
+}
+```
+
+## 注释原则
+
+- 解释 **为什么**（why），而不是 **是什么**（what）
+- 代码本身能说清的，别写废话注释
+- 复杂的算法、业务规则、踩过的坑，值得写
+
+```java
+// 坏：明显在干什么还写一遍
+i++;  // i 加 1
+
+// 好：解释业务原因
+// 给连续登录失败的用户加 5 分钟冷却，防暴力破解
+lockUser(account, 300);
+```
+
+## 各语言主流规范
+
+| 语言 | 规范 | 说明 |
+|---|---|---|
+| Python | **PEP 8** | 官方风格指南，4 空格缩进 |
+| Java | Google Java Style / 阿里巴巴 Java 开发手册 | 国内阿里那本很实用 |
+| C++ | Google C++ Style | 强调可读性和线程安全 |
+| JavaScript | Airbnb / Standard | Airbnb 最严格也最流行 |
+
+## 自动化工具（让机器替你格式化）
+
+| 语言 | 工具 | 作用 |
+|---|---|---|
+| Python | `black` | 一键格式化，零配置 |
+| C / C++ | `clang-format` | 按 .clang-format 配置格式化 |
+| JavaScript | `prettier` + `eslint` | 格式化 + 风格检查 |
+| Java | `checkstyle` | 静态风格检查 |
+| 通用 | EditorConfig | 跨编辑器统一缩进/换行 |
+
+> [!TIP]
+> 把格式化工具接进保存动作（VS Code 的 Format on Save）和 Git 提交钩子（pre-commit），从此不用手动纠结格式。
+
+## 提交信息规范（Conventional Commits）
+
+清晰的提交信息让 `git log` 一目了然：
+
+```bash
+feat: 新增学生成绩排序功能
+fix: 修复除零导致的崩溃
+docs: 补充 README 使用说明
+refactor: 重构数据加载逻辑
+test: 补充用户模块的单元测试
+```
+
+格式：`<类型>(可选范围): <简短描述>`
+
+## 实战：混乱代码 vs 规范代码
+
+```javascript
+// 混乱版
+function  p(u){let s=0;for(let i=0;i<u.scores.length;i++){s=s+u.scores[i];}return s/u.scores.length;}
+
+// 规范版
+function calculateAverage(user) {
+    const total = user.scores.reduce((sum, score) => sum + score, 0);
+    return total / user.scores.length;
+}
+```
+
+> [!NOTE]
+> 规范版虽然行数多，但变量名、空格、换行让意图一目了然，三个月后你依然秒懂。
+*/}),
 ];
 
 function renderMarkdown(md) {
@@ -1915,8 +3425,23 @@ function renderMarkdown(md) {
 
     if (line.match(/^[-*_]{3,}\s*$/)) { html += '<hr>'; continue; }
 
-    if (line.startsWith('> ')) {
-      html += '<blockquote>' + parseInline(line.replace(/^>\s?/, '')) + '</blockquote>';
+    if (line.startsWith('>')) {
+      var qLines = [];
+      var m = i;
+      while (m < lines.length && lines[m].startsWith('>')) {
+        qLines.push(lines[m].replace(/^>\s?/, ''));
+        m++;
+      }
+      i = m - 1;
+      var qText = qLines.join('\n');
+      var am = qText.match(/^\[!(NOTE|TIP|WARNING|CAUTION|IMPORTANT|DANGER)\]\s*\n?/);
+      if (am) {
+        var ctype = am[1].toLowerCase();
+        var cbody = qText.slice(am[0].length).replace(/\n/g, '<br>');
+        html += '<div class="callout callout-' + ctype + '"><div class="callout-title">' + am[1] + '</div><div class="callout-body">' + parseInline(cbody) + '</div></div>';
+      } else {
+        html += '<blockquote>' + parseInline(qText.replace(/\n/g, '<br>')) + '</blockquote>';
+      }
       continue;
     }
 
@@ -1954,27 +3479,69 @@ function renderMarkdown(md) {
   return html;
 }
 
+var categories = [
+  { name: '复盘', items: [ {idx:2, title:'大数据省赛全流程复盘'} ] },
+  { name: '技术', items: [
+    {idx:0, title:'Markdown 入门指南'},
+    {idx:1, title:'Linux 命令速查手册'}
+  ]},
+  { name: '教学', items: [
+    {idx:3, title:'Python 入门教程'},
+    {idx:4, title:'Java 入门教程'},
+    {idx:5, title:'C++ 入门教程'},
+    {idx:6, title:'JavaScript 入门教程'},
+    {idx:7, title:'Vim / Nano 编辑器实战'},
+    {idx:8, title:'代码风格与规范'}
+  ]}
+];
+
 (function() {
-  var navItems = document.querySelectorAll('.blog-nav-item');
+  var navCats = document.getElementById('navCats');
+  var navList = document.getElementById('navList');
   var content = document.getElementById('articleContent');
+  var activeCat = 0;
 
   function showArticle(idx) {
     content.innerHTML = renderMarkdown(articles[idx]);
     content.style.animation = 'none';
     content.offsetHeight;
     content.style.animation = 'fadeUp .4s ease both';
-    navItems.forEach(function(item, i) {
-      item.classList.toggle('active', i === idx);
+    var items = document.querySelectorAll('.blog-nav-item');
+    items.forEach(function(item) {
+      item.classList.toggle('active', parseInt(item.getAttribute('data-idx')) === idx);
     });
   }
 
-  navItems.forEach(function(item) {
-    item.addEventListener('click', function() {
-      showArticle(parseInt(this.getAttribute('data-idx')));
+  function renderList() {
+    navList.innerHTML = '';
+    categories[activeCat].items.forEach(function(a) {
+      var b = document.createElement('button');
+      b.className = 'blog-nav-item';
+      b.setAttribute('data-idx', a.idx);
+      b.textContent = a.title;
+      b.addEventListener('click', function() { showArticle(a.idx); });
+      navList.appendChild(b);
     });
-  });
+    showArticle(categories[activeCat].items[0].idx);
+  }
 
-  showArticle(0);
+  function renderCats() {
+    navCats.innerHTML = '';
+    categories.forEach(function(cat, ci) {
+      var b = document.createElement('button');
+      b.className = 'blog-cat' + (ci === activeCat ? ' active' : '');
+      b.textContent = cat.name;
+      b.addEventListener('click', function() {
+        activeCat = ci;
+        renderCats();
+        renderList();
+      });
+      navCats.appendChild(b);
+    });
+  }
+
+  renderCats();
+  renderList();
 })();
 
 var _tr_usler_md = document.querySelector('[data-tr-usler]');
