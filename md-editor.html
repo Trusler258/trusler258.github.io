@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2367e8f9'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <link rel="stylesheet" href="style.css">
 <style>
 .editor-layout {
@@ -59,7 +60,7 @@
   padding: 2px 6px; border-radius: 4px; font-family: var(--fm); font-size: 12px;
 }
 #preview pre {
-  background: #0a0a18; border: 1px solid var(--border);
+  position: relative; background: #0a0a18; border: 1px solid var(--border);
   border-radius: 8px; margin: 12px 0; overflow: hidden;
   font-family: var(--fm); font-size: 12px; line-height: 1.7;
 }
@@ -77,6 +78,18 @@
   background-size: 10px 10px;
 }
 #preview pre code { display: block; padding: 16px; background: none; color: #a0a0c0; }
+#preview pre code.hljs { background: transparent; }
+#preview .copy-btn {
+  position: absolute; top: 6px; right: 10px; z-index: 3;
+  padding: 3px 10px; border: 1px solid var(--border);
+  border-radius: 6px; background: rgba(0,0,0,.6);
+  color: var(--muted); font-size: 11px; cursor: pointer;
+  font-family: inherit; transition: all .15s; opacity: 0;
+}
+#preview pre:hover .copy-btn { opacity: 1; }
+#preview .copy-btn:hover { color: var(--text); border-color: rgba(103,232,249,.4);
+  background: rgba(103,232,249,.08); }
+#preview .copy-btn.copied { color: #3ddc84; border-color: rgba(61,220,132,.4); }
 #preview blockquote {
   border-left: 2px solid var(--highlight); padding: 6px 16px;
   margin: 10px 0; color: var(--muted); font-style: italic;
@@ -134,7 +147,7 @@ var demo = '# Markdown 实时预览\n\n## 欢迎使用\n\n这是一个**纯前�
 function renderMarkdown(md) {
   var lines = md.split('\n');
   var html = '';
-  var inCodeBlock = false, codeContent = '';
+  var inCodeBlock = false, codeContent = '', codeLang = '';
   var inTable = false, tableHtml = '';
   var inList = false;
 
@@ -153,9 +166,10 @@ function renderMarkdown(md) {
 
     if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
-        html += '<pre><code>' + codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>';
-        codeContent = ''; inCodeBlock = false;
-      } else { inCodeBlock = true; }
+        var langAttr = codeLang ? ' class="language-' + codeLang + '"' : '';
+        html += '<pre><code' + langAttr + '>' + codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>';
+        codeContent = ''; codeLang = ''; inCodeBlock = false;
+      } else { inCodeBlock = true; codeLang = line.trim().slice(3).trim().split(' ')[0]; }
       continue;
     }
     if (inCodeBlock) { codeContent += (codeContent ? '\n' : '') + line; continue; }
@@ -217,23 +231,48 @@ function renderMarkdown(md) {
 var input = document.getElementById('editorInput');
 var preview = document.getElementById('preview');
 
+function renderPreview(html) {
+  preview.innerHTML = html;
+  if (typeof hljs !== 'undefined') {
+    preview.querySelectorAll('pre code').forEach(function(el) { hljs.highlightElement(el); });
+  }
+  preview.querySelectorAll('pre').forEach(function(pre) {
+    if (pre.querySelector('.copy-btn')) return;
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn'; btn.textContent = 'Copy';
+    btn.onclick = function() {
+      var code = pre.querySelector('code');
+      var text = code ? code.textContent : pre.textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        btn.textContent = 'Copied!'; btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+      }).catch(function() {
+        btn.textContent = 'Failed';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      });
+    };
+    pre.appendChild(btn);
+  });
+}
+
 input.addEventListener('input', function() {
-  preview.innerHTML = renderMarkdown(input.value);
+  renderPreview(renderMarkdown(input.value));
 });
 
 function loadDemo() {
   input.value = demo;
-  preview.innerHTML = renderMarkdown(demo);
+  renderPreview(renderMarkdown(demo));
 }
 
 function clearEditor() {
   input.value = '';
-  preview.innerHTML = '';
+  renderPreview('');
 }
 
 // 加载示例
 loadDemo();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="effects.js"></script>
 </body>
 </html>

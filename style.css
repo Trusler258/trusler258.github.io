@@ -389,7 +389,7 @@ footer b { color: var(--text); }
   font-family: var(--fm); font-size: 12px;
 }
 .blog-article pre {
-  background: #0a0a18; border: 1px solid var(--border);
+  position: relative; background: #0a0a18; border: 1px solid var(--border);
   border-radius: 10px; margin: 16px 0; overflow: hidden;
   font-family: var(--fm); font-size: 12px; line-height: 1.7;
 }
@@ -411,6 +411,18 @@ footer b { color: var(--text); }
   background: none; color: #a0a0c0; overflow-x: auto;
 }
 .blog-article pre code.hljs { background: transparent; }
+
+.copy-btn {
+  position: absolute; top: 6px; right: 10px; z-index: 3;
+  padding: 3px 10px; border: 1px solid var(--border);
+  border-radius: 6px; background: rgba(0,0,0,.6);
+  color: var(--muted); font-size: 11px; cursor: pointer;
+  font-family: inherit; transition: all .15s; opacity: 0;
+}
+pre:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { color: var(--text); border-color: rgba(103,232,249,.4);
+  background: rgba(103,232,249,.08); }
+.copy-btn.copied { color: #3ddc84; border-color: rgba(61,220,132,.4); }
 
 .timeline {
   position: relative; padding-left: 28px; margin: 16px 0;

@@ -3797,6 +3797,27 @@ function renderMarkdown(md) {
   return html;
 }
 
+function addCopyButtons(container) {
+  container.querySelectorAll('pre').forEach(function(pre) {
+    if (pre.querySelector('.copy-btn')) return;
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.onclick = function() {
+      var code = pre.querySelector('code');
+      var text = code ? code.textContent : pre.textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        btn.textContent = 'Copied!'; btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+      }).catch(function() {
+        btn.textContent = 'Failed';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+      });
+    };
+    pre.appendChild(btn);
+  });
+}
+
 var categories = [
   { name: '复盘', items: [ {idx:2, title:'大数据省赛全流程复盘'} ] },
   { name: '技术', items: [
@@ -3824,6 +3845,7 @@ var categories = [
     if (typeof hljs !== 'undefined') {
       content.querySelectorAll('pre code').forEach(function(el) { hljs.highlightElement(el); });
     }
+    addCopyButtons(content);
     content.style.animation = 'none';
     content.offsetHeight;
     content.style.animation = 'fadeUp .4s ease both';
