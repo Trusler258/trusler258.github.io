@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Tools | Trusler</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2367e8f9'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.toolbar {
+  padding: 10px 16px; background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.toolbar a { color: var(--muted); text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 4px; transition: color .2s; font-family: var(--fm); }
+.toolbar a:hover { color: var(--highlight); }
+
+.tools-layout {
+  flex: 1; display: flex; height: calc(100vh - 45px);
+  position: relative; z-index: 1;
+}
+.input-pane, .output-pane {
+  flex: 1; display: flex; flex-direction: column;
+  border: 1px solid var(--border);
+  min-width: 0;
+}
+.input-pane { border-radius: 12px 0 0 12px; }
+.output-pane { border-radius: 0 12px 12px 0; border-left: none; }
+
+.pane-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--fd); font-size: 11px; font-weight: 700;
+  color: var(--soft); letter-spacing: 1px;
+  flex-wrap: wrap; gap: 6px;
+}
+.btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.tool-btn {
+  padding: 5px 14px; background: rgba(255,255,255,.04);
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--soft); font-size: 11px; cursor: pointer;
+  font-family: var(--fm); transition: all .2s;
+}
+.tool-btn:hover { background: rgba(103,232,249,.1); border-color: var(--highlight); color: var(--highlight); }
+.tool-btn.accent { border-color: var(--admin); color: var(--admin); }
+.tool-btn.accent:hover { background: rgba(244,114,182,.1); }
+.tool-btn.green { border-color: var(--ok); color: var(--ok); }
+.tool-btn.green:hover { background: rgba(34,197,94,.1); }
+
+#jsonInput, #jsonOutput {
+  flex: 1; padding: 20px; background: #050510;
+  border: none; color: #a0a0c0; font-family: var(--fm);
+  font-size: 12px; line-height: 1.7; resize: none;
+  outline: none; tab-size: 2;
+}
+#jsonInput::placeholder, #jsonOutput::placeholder { color: var(--muted); }
+#jsonOutput { background: #08081a; }
+
+.status-bar {
+  padding: 6px 16px; background: var(--panel2);
+  border-top: 1px solid var(--border);
+  font-family: var(--fm); font-size: 11px;
+  display: flex; align-items: center; gap: 8px;
+}
+.status-bar.ok { color: var(--ok); }
+.status-bar.err { color: #ff5f6d; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+#errorDetail {
+  padding: 8px 16px; font-family: var(--fm); font-size: 11px;
+  color: #ff5f6d; background: rgba(255,95,109,.05);
+  border-top: 1px solid rgba(255,95,109,.1);
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .tools-layout { flex-direction: column; height: auto; }
+  #jsonInput, #jsonOutput { min-height: 250px; }
+}
+</style>
+</head>
+<body>
+
+<div class="rainbow-line"></div>
+
+<div class="toolbar">
+  <a href="index.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    返回首页
+  </a>
+  <span style="color:var(--muted);font-size:12px;margin-left:auto;font-family:var(--fm);">JSON Tools</span>
+</div>
+
+<div class="tools-layout">
+  <div class="input-pane">
+    <div class="pane-header">
+      <span>INPUT</span>
+      <div class="btn-group">
+        <button class="tool-btn" onclick="loadDemo()">DEMO</button>
+        <button class="tool-btn" onclick="clearAll()">CLEAR</button>
+      </div>
+    </div>
+    <textarea id="jsonInput" placeholder='在此粘贴 JSON...  {"name":"hello","items":[1,2,3]}' spellcheck="false"></textarea>
+    <div class="status-bar" id="inputStatus">
+      <span class="status-dot"></span>
+      <span id="inputStatusText">等待输入</span>
+      <span style="margin-left:auto;opacity:.5;" id="inputSize"></span>
+    </div>
+    <div id="errorDetail"></div>
+  </div>
+
+  <div class="output-pane">
+    <div class="pane-header">
+      <span>OUTPUT</span>
+      <div class="btn-group">
+        <button class="tool-btn" onclick="doFormat()" title="缩进美化">FORMAT</button>
+        <button class="tool-btn" onclick="doCompress()" title="单行压缩">COMPRESS</button>
+        <button class="tool-btn green" onclick="doCopy()" title="复制到剪贴板">COPY</button>
+        <button class="tool-btn accent" onclick="doEscape()" title="转义为字符串">ESCAPE</button>
+        <button class="tool-btn" onclick="doUnescape()" title="反转义">UNESCAPE</button>
+      </div>
+    </div>
+    <textarea id="jsonOutput" placeholder="点击按钮处理..." readonly spellcheck="false"></textarea>
+  </div>
+</div>
+
+<script>
+var input = document.getElementById('jsonInput');
+var output = document.getElementById('jsonOutput');
+var inputStatus = document.getElementById('inputStatus');
+var inputStatusText = document.getElementById('inputStatusText');
+var inputSize = document.getElementById('inputSize');
+var errorDetail = document.getElementById('errorDetail');
+
+var demo = '{\n  "name": "Trusler",\n  "age": 18,\n  "skills": ["Python", "C++", "Qt6"],\n  "projects": {\n    "qqbot": {"lang": "Python", "stars": 3},\n    "adofai": {"lang": "C#", "stars": 3}\n  },\n  "active": true,\n  "url": "https://github.com/Trusler258"\n}';
+
+function parseInput() {
+  try {
+    var obj = JSON.parse(input.value);
+    updateStatus(true, 'JSON 有效');
+    errorDetail.style.display = 'none';
+    return obj;
+  } catch(e) {
+    updateStatus(false, 'JSON 无效: ' + e.message);
+    errorDetail.textContent = e.message;
+    errorDetail.style.display = 'block';
+    return null;
+  }
+}
+
+function updateStatus(ok, msg) {
+  inputStatus.className = 'status-bar ' + (ok ? 'ok' : 'err');
+  inputStatusText.textContent = msg;
+  inputSize.textContent = input.value.length + ' chars';
+}
+
+function doFormat() {
+  var obj = parseInput();
+  if (obj) output.value = JSON.stringify(obj, null, 2);
+}
+
+function doCompress() {
+  var obj = parseInput();
+  if (obj) output.value = JSON.stringify(obj);
+}
+
+function doEscape() {
+  var text = input.value || output.value;
+  if (!text) return;
+  output.value = JSON.stringify(text);
+}
+
+function doUnescape() {
+  var text = input.value || output.value;
+  if (!text) return;
+  try {
+    output.value = JSON.parse(text);
+  } catch(e) {
+    output.value = text;
+  }
+}
+
+function doCopy() {
+  var text = output.value;
+  if (!text) { output.value = '请先执行 FORMAT 或 COMPRESS'; return; }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      inputStatusText.textContent = '已复制到剪贴板';
+    });
+  } else {
+    output.select();
+    document.execCommand('copy');
+    inputStatusText.textContent = '已复制到剪贴板';
+  }
+}
+
+function loadDemo() {
+  input.value = demo;
+  output.value = JSON.stringify(JSON.parse(demo), null, 2);
+  updateStatus(true, 'JSON 有效 (Demo)');
+  errorDetail.style.display = 'none';
+}
+
+function clearAll() {
+  input.value = '';
+  output.value = '';
+  updateStatus(true, '等待输入');
+  errorDetail.style.display = 'none';
+}
+
+// 自动检测输入变化
+input.addEventListener('input', function() {
+  updateStatus(true, input.value ? '已输入' : '等待输入');
+  errorDetail.style.display = 'none';
+});
+
+// 快捷键 Ctrl+Enter 格式化
+input.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    doFormat();
+  }
+});
+
+loadDemo();
+</script>
+<script src="effects.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Trusler 技术博客">
+<meta name="theme-color" content="#0d0d1a">
+<title>Blog | Trusler</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2367e8f9'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="rainbow-line"></div>
+<div class="particles" id="particles" aria-hidden="true"></div>
+
+<div class="blog-layout">
+  <nav class="blog-nav">
+    <div class="card">
+      <div class="blog-nav-title">ARTICLES</div>
+      <button class="blog-nav-item active" data-idx="0">Markdown 入门指南</button>
+      <button class="blog-nav-item" data-idx="1">Linux 命令速查手册</button>
+      <button class="blog-nav-item" data-idx="2">大数据省赛全流程复盘</button>
+      <a href="index.html" class="blog-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        返回首页
+      </a>
+    </div>
+  </nav>
+
+  <section class="blog-content">
+    <div class="card">
+      <div class="blog-article" id="articleContent"><!-- JS --></div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <span>&copy; <span id="year">2024</span> Trusler &nbsp;|&nbsp;
+  Powered by <b style="color:var(--highlight)">GitHub Pages</b></span>
+</footer>
+
+<script src="blog.js"></script>
+<script src="effects.js"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Base64 Tools | Trusler</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2367e8f9'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.toolbar {
+  padding: 10px 16px; background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.toolbar a { color: var(--muted); text-decoration: none; font-size: 12px; display: flex; align-items: center; gap: 4px; transition: color .2s; font-family: var(--fm); }
+.toolbar a:hover { color: var(--highlight); }
+
+.tools-wrap {
+  flex:1; display:flex; flex-direction:column; gap:16px;
+  max-width:900px; margin:30px auto; width:95%;
+  position:relative; z-index:1;
+}
+.pair { display:flex; gap:16px; }
+.pair > div { flex:1; min-width:0; }
+
+.pane { background:var(--panel); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.pane-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 16px; background:var(--panel);
+  border-bottom:1px solid var(--border);
+  font-family:var(--fd); font-size:11px; font-weight:700;
+  color:var(--soft); letter-spacing:1px;
+}
+.pane textarea {
+  width:100%; height:220px; padding:16px; background:#050510;
+  border:none; color:#a0a0c0; font-family:var(--fm);
+  font-size:12px; line-height:1.7; resize:none; outline:none;
+}
+.pane textarea::placeholder { color:var(--muted); }
+
+.pane-btn {
+  padding:5px 14px; background:rgba(255,255,255,.04);
+  border:1px solid var(--border); border-radius:6px;
+  color:var(--soft); font-size:11px; cursor:pointer;
+  font-family:var(--fm); transition:all .2s;
+}
+.pane-btn:hover { background:rgba(103,232,249,.1); border-color:var(--highlight); color:var(--highlight); }
+.pane-btn.green { border-color:var(--ok); color:var(--ok); }
+.pane-btn.green:hover { background:rgba(34,197,94,.1); }
+
+.status { padding:6px 16px; font-family:var(--fm); font-size:10px; border-top:1px solid var(--border); }
+.status.ok { color:var(--ok); }
+.status.err { color:#ff5f6d; }
+
+@media (max-width:600px) { .pair { flex-direction:column; } }
+</style>
+</head>
+<body>
+
+<div class="rainbow-line"></div>
+
+<div class="toolbar">
+  <a href="index.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    返回首页
+  </a>
+  <span style="color:var(--muted);font-size:12px;margin-left:auto;font-family:var(--fm);">Base64 Tools</span>
+</div>
+
+<div class="tools-wrap">
+
+  <div class="pair">
+    <div class="pane">
+      <div class="pane-header">
+        <span>ENCODE → Base64</span>
+        <button class="pane-btn" onclick="doEncode()">ENCODE</button>
+      </div>
+      <textarea id="plainIn" placeholder="输入要编码的文本..." spellcheck="false"></textarea>
+      <div class="status" id="encStatus">等待输入</div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-header">
+        <span>DECODE ← Base64</span>
+        <div style="display:flex;gap:6px;">
+          <button class="pane-btn" onclick="doDecode()">DECODE</button>
+          <button class="pane-btn green" onclick="copyResult()">COPY</button>
+        </div>
+      </div>
+      <textarea id="b64Result" placeholder="结果..." readonly spellcheck="false"></textarea>
+      <div class="status" id="decStatus">等待输入</div>
+    </div>
+  </div>
+
+  <div class="pair">
+    <div class="pane">
+      <div class="pane-header">
+        <span>Base64 输入</span>
+        <button class="pane-btn" onclick="doDecodeFrom()">DECODE</button>
+      </div>
+      <textarea id="b64In" placeholder="粘贴 Base64 字符串..." spellcheck="false"></textarea>
+      <div class="status" id="b64Status">等待输入</div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-header">
+        <span>解码结果</span>
+        <button class="pane-btn green" onclick="copyDecoded()">COPY</button>
+      </div>
+      <textarea id="plainResult" placeholder="结果..." readonly spellcheck="false"></textarea>
+      <div class="status" id="plainStatus">等待输入</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var plainIn = document.getElementById('plainIn');
+var b64Result = document.getElementById('b64Result');
+var b64In = document.getElementById('b64In');
+var plainResult = document.getElementById('plainResult');
+
+function doEncode() {
+  try {
+    b64Result.value = btoa(unescape(encodeURIComponent(plainIn.value)));
+    document.getElementById('encStatus').textContent = '编码成功';
+    document.getElementById('encStatus').className = 'status ok';
+  } catch(e) {
+    document.getElementById('encStatus').textContent = '编码失败: ' + e.message;
+    document.getElementById('encStatus').className = 'status err';
+  }
+}
+
+function doDecode() {
+  try {
+    b64Result.value = decodeURIComponent(escape(atob(b64Result.value)));
+  } catch(e) {}
+}
+
+function doDecodeFrom() {
+  try {
+    plainResult.value = decodeURIComponent(escape(atob(b64In.value)));
+    document.getElementById('b64Status').textContent = '解码成功';
+    document.getElementById('b64Status').className = 'status ok';
+  } catch(e) {
+    document.getElementById('b64Status').textContent = '解码失败: ' + e.message;
+    document.getElementById('b64Status').className = 'status err';
+  }
+}
+
+function copyResult() {
+  var t = b64Result.value;
+  if (!t) return;
+  navigator.clipboard ? navigator.clipboard.writeText(t) : (b64Result.select(), document.execCommand('copy'));
+  document.getElementById('decStatus').textContent = '已复制';
+  document.getElementById('decStatus').className = 'status ok';
+}
+
+function copyDecoded() {
+  var t = plainResult.value;
+  if (!t) return;
+  navigator.clipboard ? navigator.clipboard.writeText(t) : (plainResult.select(), document.execCommand('copy'));
+  document.getElementById('plainStatus').textContent = '已复制';
+  document.getElementById('plainStatus').className = 'status ok';
+}
+
+// 实时编码
+plainIn.addEventListener('input', function() {
+  if (plainIn.value) doEncode();
+  else b64Result.value = '';
+});
+</script>
+<script src="effects.js"></script>
+</body>
+</html>
