@@ -3849,6 +3849,7 @@ var categories = [
     content.style.animation = 'none';
     content.offsetHeight;
     content.style.animation = 'fadeUp .4s ease both';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     var items = document.querySelectorAll('.blog-nav-item');
     items.forEach(function(item) {
       item.classList.toggle('active', parseInt(item.getAttribute('data-idx')) === idx);
