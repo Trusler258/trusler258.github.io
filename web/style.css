@@ -1,4 +1,4 @@
-
+/* ========== CSS 变量 ========== */
 :root {
   --bg: #0d0d1a;
   --panel: #12122a;
@@ -13,9 +13,9 @@
   --rainbow: linear-gradient(90deg, #ff5f6d, #ffb147, #ffe259, #3ddc84, #38bdf8, #8b7bff, #e879f9, #ff5f6d);
   --fd: 'Space Grotesk', 'Noto Sans SC', sans-serif;
   --fm: 'JetBrains Mono', 'Fira Code', monospace;
-  --_tr_usler_build: 1;
 }
 
+/* ========== 基础重置 ========== */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
@@ -37,18 +37,21 @@ body {
 ::-webkit-scrollbar-thumb { background: #26264a; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3a6a; }
 
+/* ========== 流动动画 ========== */
 @keyframes flow { to { background-position: 200% 0; } }
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ========== 顶部彩虹条 ========== */
 .rainbow-line {
   position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100;
   background: var(--rainbow); background-size: 200% 100%;
   animation: flow 8s linear infinite;
 }
 
+/* ========== 背景粒子 ========== */
 .particles {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   pointer-events: none; z-index: 0; overflow: hidden;
@@ -87,6 +90,7 @@ body {
   50% { opacity: 1; transform: scale(1.5); }
 }
 
+/* ========== 主页布局 ========== */
 main {
   flex: 1; display: flex;
   max-width: 1200px; margin: 40px auto;
@@ -163,6 +167,7 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
 .content-area > .card:nth-child(2) { animation-delay: .2s; }
 .content-area > .card:nth-child(3) { animation-delay: .3s; }
 
+/* 通用卡片 */
 .card {
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 24px;
@@ -188,6 +193,7 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
   animation: flow 6s linear infinite;
 }
 
+/* 终端 */
 .terminal {
   background: #050510; border: 1px solid var(--border);
   border-radius: 10px; font-family: var(--fm); font-size: 12px; overflow: hidden;
@@ -206,6 +212,7 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
 .comment { color: var(--muted); }
 @keyframes blink { 50% { opacity: 0; } }
 
+/* 项目网格 */
 .project-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -244,6 +251,7 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
 }
 .proj-stars svg { opacity: .5; }
 
+/* 技能条 */
 .skill-row { margin-bottom: 14px; }
 .skill-row:last-child { margin-bottom: 0; }
 .skill-info {
@@ -262,6 +270,7 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
 }
 .skill-fill.visible { width: var(--w); }
 
+/* 页脚 */
 footer {
   position: relative; z-index: 1;
   margin-top: auto; padding: 20px;
@@ -271,6 +280,7 @@ footer {
 }
 footer b { color: var(--text); }
 
+/* ========== 响应式 ========== */
 @media (max-width: 900px) {
   main { flex-direction: column; margin: 20px auto; }
   .sidebar { width: 100%; position: relative; top: 0; }
@@ -282,6 +292,7 @@ footer b { color: var(--text); }
   .card { padding: 20px; }
 }
 
+/* ========== 博客页样式 ========== */
 .blog-layout {
   flex: 1; display: flex;
   max-width: 1100px; margin: 40px auto 20px;
@@ -369,6 +380,7 @@ footer b { color: var(--text); }
   background: none; color: #a0a0c0; overflow-x: auto;
 }
 
+/* 时间线 */
 .timeline {
   position: relative; padding-left: 28px; margin: 16px 0;
 }

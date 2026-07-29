@@ -1,4 +1,4 @@
-
+// ===== 背景粒子 =====
 (function() {
   var container = document.getElementById('particles');
   if (!container) return;
@@ -15,15 +15,18 @@
   }
 })();
 
+// ===== 版权年份 =====
 (function() {
   var el = document.getElementById('year');
   if (el) el.textContent = new Date().getFullYear();
 })();
 
+// ===== 从函数注释中提取原文 =====
 function raw(fn) {
   return fn.toString().slice(15, -4);
 }
 
+// ===== 文章数据（用函数注释存储，反引号无需转义） =====
 var articles = [
   /* ---- 0: Markdown 入门 ---- */
   raw(function(){/*
@@ -1851,6 +1854,7 @@ ax.pie(weather_counts.values, labels=weather_counts.index, autopct='%1.1f%%', st
 */})
 ];
 
+// ===== 简易 Markdown 渲染器 =====
 function renderMarkdown(md) {
   var lines = md.split('\n');
   var html = '';
@@ -1944,6 +1948,7 @@ function renderMarkdown(md) {
 
     if (line.trim() === '') continue;
 
+    // 原始 HTML 透传
     if (line.trim().startsWith('<')) { html += line; continue; }
 
     html += '<p>' + parseInline(line) + '</p>';
@@ -1952,6 +1957,7 @@ function renderMarkdown(md) {
   return html;
 }
 
+// ===== 文章导航 =====
 (function() {
   var navItems = document.querySelectorAll('.blog-nav-item');
   var content = document.getElementById('articleContent');
@@ -1974,5 +1980,3 @@ function renderMarkdown(md) {
 
   showArticle(0);
 })();
-
-var _tr_usler_md = document.querySelector('[data-tr-usler]');

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 反阅读器：降低 Safari Reader 将本页识别为"文章"的概率 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<title>幻梦控制台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   幻梦控制台 · 样式（暖调控制室 / 多色仪表 / CRT 氛围）
+   ============================================================ */
+:root{
+  --bg-deep:#0e1017; --bg-panel:#151922; --bg-card:#1a1f2b; --bg-hover:#212836;
+  --border:#2a3142; --border-lit:#3d4a63;
+  --amber:#f0a830; --cyan:#38c8d8; --green:#3ddc84; --red:#f04848; --magenta:#d84890;
+  --text-hi:#e8ecf4; --text-mid:#9aa8c0; --text-lo:#5a6a84;
+  --font-display:'Chakra Petch','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','SF Mono','Menlo',monospace;
+  --radius:6px;
+  --glow-amber:0 0 12px rgba(240,168,48,.25);
+  --glow-cyan:0 0 12px rgba(56,200,216,.2);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+
+body{
+  font-family:var(--font-mono);font-size:13px;color:var(--text-hi);
+  background:var(--bg-deep);overflow:hidden;
+  display:flex;flex-direction:column;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.012) 2px,rgba(255,255,255,.012) 4px),
+    radial-gradient(ellipse 80% 60% at 20% 10%,rgba(240,168,48,.045),transparent),
+    radial-gradient(ellipse 60% 50% at 85% 90%,rgba(56,200,216,.035),transparent),
+    linear-gradient(rgba(42,49,66,.25) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(42,49,66,.25) 1px,transparent 1px);
+  background-size:100% 4px,100% 100%,100% 100%,48px 48px,48px 48px;
+}
+/* 冻结 */
+body.frozen{filter:saturate(.3) brightness(.7);pointer-events:none}
+body.frozen .veil{pointer-events:auto}
+
+/* ---------- 开机自检 ---------- */
+#boot{
+  position:fixed;inset:0;z-index:8000;background:var(--bg-deep);
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .45s ease;
+}
+#boot.done{opacity:0;pointer-events:none}
+.boot-inner{width:min(560px,90vw)}
+.boot-brand{
+  font-family:var(--font-display);font-size:26px;font-weight:700;
+  letter-spacing:4px;color:var(--amber);text-shadow:var(--glow-amber);margin-bottom:4px;
+}
+.boot-sub{font-size:10px;letter-spacing:3px;color:var(--text-lo);margin-bottom:22px}
+#boot-log{
+  font-size:11px;line-height:1.9;color:var(--text-mid);
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;min-height:180px;white-space:pre-wrap;
+}
+#boot-log .ok{color:var(--green)}
+#boot-log .warn{color:var(--amber)}
+#boot-log .err{color:var(--red)}
+.boot-bar{height:3px;background:var(--border);border-radius:2px;margin-top:14px;overflow:hidden}
+.boot-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--amber),var(--cyan));transition:width .2s}
+.boot-skip{font-size:10px;color:var(--text-lo);margin-top:10px;text-align:right;animation:blink 1.2s step-end infinite}
+
+/* ---------- 顶栏 ---------- */
+.masthead{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;background:var(--bg-panel);border-bottom:1px solid var(--border);
+  flex-shrink:0;position:relative;z-index:10;
+}
+.masthead::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--amber),var(--cyan),var(--magenta),transparent);opacity:.5;
+}
+.mast-brand{display:flex;align-items:baseline;gap:10px}
+.mast-glyph{font-size:20px;color:var(--amber);text-shadow:var(--glow-amber);animation:glyph-pulse 3s ease-in-out infinite}
+@keyframes glyph-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.mast-title{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:2px}
+.mast-sub{font-family:var(--font-display);font-size:10px;letter-spacing:3px;color:var(--text-lo);text-transform:uppercase}
+.mast-status{display:flex;gap:20px;align-items:center}
+.status-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-mid)}
+.led{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.led-off{background:#444}
+.led-green{background:var(--green);box-shadow:0 0 6px var(--green)}
+.led-amber{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.led-cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
+.led-red{background:var(--red);box-shadow:0 0 6px var(--red)}
+.blink{animation:blink 1.2s step-end infinite}
+@keyframes blink{50%{opacity:.2}}
+
+/* ---------- 主体 ---------- */
+.console-body{flex:1;display:flex;overflow:hidden;min-height:0}
+
+/* 侧栏 */
+.rail{
+  width:224px;flex-shrink:0;padding:14px;display:flex;flex-direction:column;gap:12px;
+  border-right:1px solid var(--border);background:var(--bg-panel);overflow-y:auto;
+}
+.rail-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;transition:border-color .2s,transform .15s}
+.rail-card:hover{border-color:var(--border-lit);transform:translateY(-1px)}
+.rail-label{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-lo);margin-bottom:6px}
+.rail-value{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--amber);text-shadow:var(--glow-amber);line-height:1.1}
+.rail-value small{font-size:11px;color:var(--text-lo);font-weight:400}
+#spark{display:block;width:100%;height:48px;margin-top:8px;border-radius:3px;background:rgba(0,0,0,.3)}
+#spark.stale{opacity:.3}
+
+/* 等级分布（动画条） */
+.level-bars{list-style:none}
+.level-bars li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-mid);padding:4px 0}
+.level-bars i{margin-left:auto;font-style:normal;color:var(--text-hi);min-width:34px;text-align:right}
+.lb-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.lb-info{background:var(--cyan)} .lb-warn{background:var(--amber)} .lb-error{background:var(--red)}
+.lb-track{flex:1;height:4px;background:rgba(0,0,0,.35);border-radius:2px;overflow:hidden}
+.lb-fill{display:block;height:100%;width:0;border-radius:2px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.lb-fill.f-info{background:var(--cyan)} .lb-fill.f-warn{background:var(--amber)} .lb-fill.f-error{background:var(--red)}
+
+/* 操作区 */
+.rail-actions{display:flex;flex-direction:column;gap:8px}
+.btn-clear{
+  font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:1px;
+  padding:7px 0;border:1px solid var(--border-lit);border-radius:var(--radius);
+  background:transparent;color:var(--text-mid);cursor:pointer;transition:all .15s;
+}
+.btn-clear:hover{background:var(--bg-hover);color:var(--text-hi);border-color:var(--amber)}
+.btn-clear:active{transform:scale(.97)}
+.chk{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-mid);cursor:pointer}
+.chk input{accent-color:var(--amber)}
+
+/* 日志流 */
+.stream-wrap{flex:1;display:flex;flex-direction:column;min-width:0}
+.stream-toolbar{display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-shrink:0}
+.stream-title{font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:1px;color:var(--text-mid)}
+.filter-group{display:flex;gap:4px}
+.fbtn{
+  font-family:var(--font-mono);font-size:10px;padding:3px 8px;
+  border:1px solid var(--border);border-radius:3px;background:transparent;
+  color:var(--text-lo);cursor:pointer;transition:all .12s;
+}
+.fbtn:hover{border-color:var(--border-lit);color:var(--text-mid)}
+.fbtn.active{background:var(--amber);border-color:var(--amber);color:#000;font-weight:700}
+.stream-search{
+  margin-left:auto;font-family:var(--font-mono);font-size:11px;padding:4px 10px;width:160px;
+  border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card);
+  color:var(--text-hi);outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.stream-search:focus{border-color:var(--cyan);box-shadow:var(--glow-cyan)}
+.stream-search::placeholder{color:var(--text-lo)}
+
+.stream{flex:1;overflow-y:auto;padding:8px 0;scroll-behavior:smooth}
+.stream::-webkit-scrollbar{width:6px}
+.stream::-webkit-scrollbar-track{background:transparent}
+.stream::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.stream::-webkit-scrollbar-thumb:hover{background:var(--border-lit)}
+
+.log-line{
+  display:flex;align-items:baseline;gap:10px;padding:3px 16px;
+  font-size:12px;line-height:1.6;border-left:2px solid transparent;
+  animation:log-in .2s ease-out;transition:background .1s;
+}
+.log-line:hover{background:var(--bg-hover)}
+@keyframes log-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.log-line.lv-info{border-left-color:var(--cyan)}
+.log-line.lv-warn{border-left-color:var(--amber);background:rgba(240,168,48,.03)}
+.log-line.lv-error{border-left-color:var(--red);background:rgba(240,72,72,.04)}
+.log-ts{flex-shrink:0;font-size:10px;color:var(--text-lo);min-width:70px}
+.log-level{flex-shrink:0;font-size:9px;font-weight:700;letter-spacing:.5px;padding:1px 5px;border-radius:2px;min-width:42px;text-align:center}
+.lv-info .log-level{color:var(--cyan);background:rgba(56,200,216,.1)}
+.lv-warn .log-level{color:var(--amber);background:rgba(240,168,48,.1)}
+.lv-error .log-level{color:var(--red);background:rgba(240,72,72,.12)}
+.log-msg{color:var(--text-hi);word-break:break-all}
+.lv-warn .log-msg{color:#f0c870}
+.lv-error .log-msg{color:#f08080}
+.log-line.hidden{display:none}
+
+/* 底栏 */
+.foot{display:flex;justify-content:space-between;padding:6px 20px;font-size:10px;color:var(--text-lo);background:var(--bg-panel);border-top:1px solid var(--border);flex-shrink:0}
+
+/* ---------- 警戒条 ---------- */
+.devwarn{
+  position:fixed;top:0;left:0;right:0;z-index:9000;
+  background:linear-gradient(135deg,#2a1010,#1a0808);
+  border-bottom:2px solid var(--red);box-shadow:0 4px 24px rgba(240,72,72,.3);
+  animation:warn-slide .3s ease-out;
+}
+@keyframes warn-slide{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.devwarn-in{display:flex;align-items:center;gap:12px;padding:12px 20px;max-width:700px;margin:0 auto}
+.dw-ico{font-size:22px;animation:blink .8s step-end infinite}
+.dw-txt{flex:1}
+.dw-txt b{display:block;font-family:var(--font-display);font-size:13px;color:var(--red);margin-bottom:2px}
+.dw-txt span{font-size:11px;color:var(--text-mid)}
+.dw-txt i{font-style:normal;color:var(--red);font-weight:700}
+.dw-btn{
+  font-family:var(--font-display);font-size:11px;font-weight:600;padding:6px 14px;
+  border:1px solid var(--red);border-radius:var(--radius);background:transparent;
+  color:var(--red);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.dw-btn:hover{background:var(--red);color:#fff}
+.dw-progress{display:block;height:3px;background:var(--red);width:100%;transition:width .1s linear;box-shadow:0 0 8px var(--red)}
+
+/* ---------- 冻结遮罩 ---------- */
+.veil{
+  position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+  background:rgba(8,10,16,.92);backdrop-filter:blur(4px);animation:veil-in .4s ease-out;
+}
+@keyframes veil-in{from{opacity:0}to{opacity:1}}
+.veil-card{text-align:center;padding:40px 50px;border:1px solid #8a2020;border-radius:8px;background:var(--bg-card);box-shadow:0 0 60px rgba(240,72,72,.15)}
+.veil-card b{font-size:36px;display:block;margin-bottom:12px}
+.veil-card p{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--red);margin-bottom:6px}
+.veil-card small{font-size:11px;color:var(--text-lo);display:block;margin-bottom:16px}
+.veil-card .code{font-size:10px;color:var(--text-lo);background:rgba(0,0,0,.4);padding:6px 12px;border-radius:3px;border:1px solid var(--border);letter-spacing:.5px}
+
+@media (max-width:768px){
+  .rail{display:none}
+  .mast-sub{display:none}
+  .stream-search{width:100px}
+}
+</style>
+</head>
+<body>
+
+<!-- 阅读器兜底：JS 被剥离时显示 -->
+<noscript>
+  <div style="position:fixed;inset:0;z-index:99999;background:#0e1017;display:flex;align-items:center;justify-content:center;color:#f04848;font-family:monospace;text-align:center;padding:40px;">
+    <div>
+      <p style="font-size:24px;margin-bottom:12px;">⛔</p>
+      <p style="font-size:16px;margin-bottom:8px;">此页面需要 JavaScript 运行</p>
+      <p style="font-size:12px;color:#5a6a84;">页面可能已被阅读器视图或脚本拦截器破坏</p>
+    </div>
+  </div>
+</noscript>
+
+<!-- ====== 开机自检 ====== -->
+<div id="boot">
+  <div class="boot-inner">
+    <div class="boot-brand">◈ 幻梦控制台</div>
+    <div class="boot-sub">PHANTOM CONSOLE · POWER-ON SELF TEST</div>
+    <div id="boot-log"></div>
+    <div class="boot-bar"><i id="boot-fill"></i></div>
+    <div class="boot-skip">点击任意处跳过</div>
+  </div>
+</div>
+
+<!-- ====== 顶部状态栏 ====== -->
+<header class="masthead">
+  <div class="mast-brand">
+    <span class="mast-glyph">◈</span>
+    <h1 class="mast-title">幻梦控制台</h1>
+    <span class="mast-sub">PHANTOM CONSOLE</span>
+  </div>
+  <div class="mast-status">
+    <div class="status-item">
+      <span class="led led-off" id="conn-led"></span>
+      <span id="conn-text">连接中…</span>
+    </div>
+    <div class="status-item">
+      <span class="led led-amber blink"></span>
+      <span id="uptime">00:00:00</span>
+    </div>
+    <div class="status-item">
+      <span class="led led-cyan"></span>
+      <span id="clock">--:--:--</span>
+    </div>
+  </div>
+</header>
+
+<!-- ====== 主体 ====== -->
+<main class="console-body">
+  <aside class="rail">
+    <section class="rail-card">
+      <h3 class="rail-label">接收速率</h3>
+      <div class="rail-value"><span id="rate">0</span><small> msg/s</small></div>
+      <canvas id="spark" width="200" height="48"></canvas>
+    </section>
+    <section class="rail-card">
+      <h3 class="rail-label">累计接收</h3>
+      <div class="rail-value"><span id="total">0</span></div>
+    </section>
+    <section class="rail-card">
+      <h3 class="rail-label">日志级别分布</h3>
+      <ul class="level-bars">
+        <li><span class="lb-dot lb-info"></span>INFO
+          <span class="lb-track"><i class="lb-fill f-info" id="bar-info"></i></span><i id="cnt-info">0</i></li>
+        <li><span class="lb-dot lb-warn"></span>WARN
+          <span class="lb-track"><i class="lb-fill f-warn" id="bar-warn"></i></span><i id="cnt-warn">0</i></li>
+        <li><span class="lb-dot lb-error"></span>ERROR
+          <span class="lb-track"><i class="lb-fill f-error" id="bar-error"></i></span><i id="cnt-error">0</i></li>
+      </ul>
+    </section>
+    <section class="rail-card rail-actions">
+      <button class="btn-clear" id="btn-pause">⏸ 暂停刷新</button>
+      <button class="btn-clear" id="btn-clear">清空日志</button>
+      <label class="chk"><input type="checkbox" id="chk-autoscroll" checked> 自动滚动</label>
+      <label class="chk"><input type="checkbox" id="chk-timestamp" checked> 显示时间戳</label>
+    </section>
+  </aside>
+
+  <section class="stream-wrap">
+    <div class="stream-toolbar">
+      <span class="stream-title">实时日志流</span>
+      <div class="filter-group">
+        <button class="fbtn active" data-level="all">全部</button>
+        <button class="fbtn" data-level="info">INFO</button>
+        <button class="fbtn" data-level="warn">WARN</button>
+        <button class="fbtn" data-level="error">ERROR</button>
+      </div>
+      <input class="stream-search" id="search" type="text" placeholder="过滤关键词…">
+    </div>
+    <div class="stream" id="stream"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>幻梦控制台 v2.1 · 单文件版</span>
+  <span id="foot-hint">WebSocket 实时推送 · 无服务时自动演示模式</span>
+</footer>
+
+<!-- ====== DevTools 警戒条 ====== -->
+<div class="devwarn" id="devwarn" hidden>
+  <div class="devwarn-in">
+    <span class="dw-ico">⚠</span>
+    <div class="dw-txt">
+      <b>检测到开发者工具</b>
+      <span id="dw-msg">页面将在 <i id="dw-n">3</i> 秒后冻结更新，关闭调试工具可撤销</span>
+    </div>
+    <button class="dw-btn" id="dw-cancel">我关错了</button>
+  </div>
+  <i class="dw-progress" id="dw-progress"></i>
+</div>
+
+<!-- ====== 冻结遮罩 ====== -->
+<div class="veil" id="veil" hidden>
+  <div class="veil-card">
+    <b>⛔</b>
+    <p>调试环境已锁定</p>
+    <small>开发者工具未在限期内关闭 · 数据流已切断</small>
+    <div class="code">ERR_DEVTOOLS_DETECTED :: STREAM HALTED</div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   第一部分 · 控制台逻辑
+   WebSocket（自动降级为本地演示模式）+ 日志渲染 + 统计
+   ============================================================ */
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+
+  var stream=$('stream'), connLed=$('conn-led'), connText=$('conn-text'),
+      rateEl=$('rate'), totalEl=$('total'),
+      cntInfo=$('cnt-info'), cntWarn=$('cnt-warn'), cntError=$('cnt-error'),
+      barInfo=$('bar-info'), barWarn=$('bar-warn'), barError=$('bar-error'),
+      uptimeEl=$('uptime'), clockEl=$('clock'), sparkCanvas=$('spark'),
+      searchInput=$('search'), chkScroll=$('chk-autoscroll'), chkTs=$('chk-timestamp'),
+      btnClear=$('btn-clear'), btnPause=$('btn-pause');
+
+  var ws=null, demoTimer=null, mode='idle', total=0,
+      counts={info:0,warn:0,error:0}, rateWindow=[],
+      sparkData=new Array(60).fill(0), startTime=Date.now(),
+      filterLevel='all', filterText='', MAX_LINES=500, paused=false;
+
+  function isFrozen(){ return window.__frozen ? window.__frozen() : false; }
+
+  /* ---------- 连接状态 ---------- */
+  function setConn(state,text){
+    connText.textContent=text;
+    connLed.className='led';
+    if(state==='ok')   connLed.classList.add('led-green');
+    if(state==='wait') connLed.classList.add('led-amber','blink');
+    if(state==='err')  connLed.classList.add('led-red');
+  }
+
+  /* ---------- WebSocket ---------- */
+  function connectWS(){
+    if(isFrozen()) return;
+    var proto = location.protocol==='https:' ? 'wss' : 'ws';
+    var url = proto+'://'+location.hostname+':8765/stream';
+    setConn('wait','连接中…');
+    try{ ws=new WebSocket(url); }catch(e){ startDemo(); return; }
+    window.__ws=ws;
+
+    ws.onopen=function(){
+      if(isFrozen()) return;
+      mode='ws'; stopDemo();
+      setConn('ok','已连接');
+      sparkCanvas.classList.remove('stale');
+    };
+    ws.onmessage=function(e){
+      if(isFrozen()||paused) return;
+      try{ handleLog(JSON.parse(e.data)); }
+      catch(err){ handleLog({level:'info',msg:e.data,ts:Date.now()}); }
+    };
+    ws.onclose=function(){
+      if(isFrozen()) return;          /* ★ 必须在第一行 */
+      if(mode==='ws'){
+        setConn('err','断开');
+        sparkCanvas.classList.add('stale');
+        mode='retry';
+        setTimeout(connectWS,3000);
+      }
+    };
+    ws.onerror=function(){
+      if(isFrozen()) return;
+      try{ ws.close(); }catch(e){}
+      if(mode!=='demo'){ startDemo(); }  /* 连不上 → 演示模式 */
+    };
+  }
+
+  /* ---------- 本地演示模式 ---------- */
+  var DEMO=[
+    ['info','用户 {uid} 登录成功，IP: {ip}'],
+    ['info','API 请求完成 GET /api/v1/users 200 {ms}ms'],
+    ['info','缓存命中 key=session:{uid} TTL=3600'],
+    ['info','定时任务 cron:cleanup 执行完毕，耗时 {ms}ms'],
+    ['info','WebSocket 心跳 ping/pong 正常'],
+    ['warn','数据库连接池使用率 {pct}%，接近阈值'],
+    ['warn','请求超时重试 GET /api/v1/orders attempt=2'],
+    ['warn','内存使用 {pct}%，GC 频率升高'],
+    ['error','数据库查询失败: connection reset by peer'],
+    ['error',"未捕获异常 TypeError: Cannot read property 'id' of null"],
+    ['error','支付回调验签失败 order={uid}']
+  ];
+  function demoLog(){
+    var p=DEMO[Math.floor(Math.random()*DEMO.length)];
+    var msg=p[1].replace('{uid}',Math.floor(10000+Math.random()*89999))
+                .replace('{ip}','192.168.'+Math.floor(Math.random()*256)+'.'+Math.floor(1+Math.random()*253))
+                .replace('{ms}',Math.floor(3+Math.random()*797))
+                .replace('{pct}',Math.floor(60+Math.random()*38));
+    return {level:p[0],msg:msg,ts:Date.now()};
+  }
+  function startDemo(){
+    if(mode==='demo'||isFrozen()) return;
+    mode='demo';
+    setConn('ok','演示模式');
+    sparkCanvas.classList.remove('stale');
+    (function loop(){
+      if(isFrozen()||mode!=='demo') return;
+      if(!paused) handleLog(demoLog());
+      demoTimer=setTimeout(loop,200+Math.random()*1300);
+    })();
+  }
+  function stopDemo(){ if(demoTimer){clearTimeout(demoTimer);demoTimer=null;} }
+
+  /* ---------- 日志处理 ---------- */
+  function handleLog(data){
+    var level=(data.level||'info').toLowerCase();
+    if(level!=='info'&&level!=='warn'&&level!=='error') level='info';
+    total++; counts[level]++; rateWindow.push(Date.now());
+    totalEl.textContent=total.toLocaleString();
+    cntInfo.textContent=counts.info;
+    cntWarn.textContent=counts.warn;
+    cntError.textContent=counts.error;
+    var max=Math.max(counts.info,counts.warn,counts.error,1);
+    barInfo.style.width=(counts.info/max*100)+'%';
+    barWarn.style.width=(counts.warn/max*100)+'%';
+    barError.style.width=(counts.error/max*100)+'%';
+    appendLine(level,data.msg||'',data.ts);
+  }
+
+  function appendLine(level,msg,ts){
+    var line=document.createElement('div');
+    line.className='log-line lv-'+level;
+    line.dataset.level=level;
+    line.dataset.msg=msg.toLowerCase();
+    var tsStr='';
+    if(chkTs.checked){
+      var d=ts?new Date(ts):new Date();
+      tsStr=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+    }
+    line.innerHTML=
+      (tsStr?'<span class="log-ts">'+tsStr+'</span>':'')+
+      '<span class="log-level">'+level.toUpperCase()+'</span>'+
+      '<span class="log-msg">'+esc(msg)+'</span>';
+    applyFilterToLine(line);
+    stream.appendChild(line);
+    while(stream.children.length>MAX_LINES) stream.removeChild(stream.firstChild);
+    if(chkScroll.checked) stream.scrollTop=stream.scrollHeight;
+  }
+
+  /* ---------- 过滤 ---------- */
+  function applyFilterToLine(line){
+    var lvOk=(filterLevel==='all')||(line.dataset.level===filterLevel);
+    var txOk=!filterText||(line.dataset.msg.indexOf(filterText)>-1);
+    line.classList.toggle('hidden',!(lvOk&&txOk));
+  }
+  function applyFilterAll(){
+    for(var i=0;i<stream.children.length;i++) applyFilterToLine(stream.children[i]);
+  }
+  var fbtns=document.querySelectorAll('.fbtn');
+  fbtns.forEach(function(btn){
+    btn.addEventListener('click',function(){
+      fbtns.forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      filterLevel=btn.dataset.level;
+      applyFilterAll();
+    });
+  });
+  searchInput.addEventListener('input',function(){
+    filterText=searchInput.value.trim().toLowerCase();
+    applyFilterAll();
+  });
+
+  /* ---------- 清空 / 暂停 ---------- */
+  btnClear.addEventListener('click',function(){
+    stream.innerHTML=''; total=0; counts={info:0,warn:0,error:0};
+    totalEl.textContent='0';
+    cntInfo.textContent='0'; cntWarn.textContent='0'; cntError.textContent='0';
+    barInfo.style.width='0'; barWarn.style.width='0'; barError.style.width='0';
+  });
+  btnPause.addEventListener('click',function(){
+    paused=!paused;
+    btnPause.textContent=paused?'▶ 恢复刷新':'⏸ 暂停刷新';
+    sparkCanvas.classList.toggle('stale',paused);
+  });
+
+  /* ---------- 速率 + 火花图 ---------- */
+  function updateRate(){
+    var now=Date.now();
+    rateWindow=rateWindow.filter(function(t){return now-t<1000;});
+    rateEl.textContent=rateWindow.length;
+    sparkData.push(rateWindow.length); sparkData.shift();
+    drawSpark();
+  }
+  setInterval(updateRate,1000);
+
+  function drawSpark(){
+    var ctx=sparkCanvas.getContext('2d'), w=sparkCanvas.width, h=sparkCanvas.height;
+    var max=Math.max.apply(null,sparkData)||1;
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath(); ctx.moveTo(0,h);
+    for(var i=0;i<sparkData.length;i++)
+      ctx.lineTo(i/(sparkData.length-1)*w, h-(sparkData[i]/max)*(h-4));
+    ctx.lineTo(w,h); ctx.closePath();
+    ctx.fillStyle='rgba(240,168,48,.08)'; ctx.fill();
+    ctx.beginPath();
+    for(var j=0;j<sparkData.length;j++){
+      var x=j/(sparkData.length-1)*w, y=h-(sparkData[j]/max)*(h-4);
+      j===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle='#f0a830'; ctx.lineWidth=1.5; ctx.stroke();
+    var ly=h-(sparkData[sparkData.length-1]/max)*(h-4);
+    ctx.beginPath(); ctx.arc(w-1,ly,2.5,0,Math.PI*2);
+    ctx.fillStyle='#f0a830'; ctx.fill();
+  }
+
+  /* ---------- 时钟 + 运行时间 ---------- */
+  function tick(){
+    var now=new Date();
+    clockEl.textContent=pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+    var s=Math.floor((Date.now()-startTime)/1000);
+    uptimeEl.textContent=pad(Math.floor(s/3600))+':'+pad(Math.floor(s%3600/60))+':'+pad(s%60);
+  }
+  setInterval(tick,1000); tick();
+
+  function pad(n){return n<10?'0'+n:''+n;}
+  function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+  /* ---------- 开机自检序列 ---------- */
+  var bootEl=$('boot'), bootLog=$('boot-log'), bootFill=$('boot-fill'), bootDone=false;
+  var BOOT_LINES=[
+    ['幻梦控制台 v2.1 · 内核加载',            ''],
+    ['渲染管线初始化 ................ ',        'ok','OK'],
+    ['防护模块 guard.js v9 挂载 ........ ',    'ok','OK'],
+    ['连接日志总线 ws://'+location.hostname+':8765 ', 'warn','尝试中'],
+    ['就绪 — 进入实时监控',                    'ok','READY']
+  ];
+  function finishBoot(){
+    if(bootDone) return;
+    bootDone=true;
+    bootEl.classList.add('done');
+    setTimeout(function(){ bootEl.remove(); },500);
+    connectWS();
+  }
+  (function runBoot(i){
+    if(i>=BOOT_LINES.length){ setTimeout(finishBoot,350); return; }
+    var L=BOOT_LINES[i];
+    var line=document.createElement('div');
+    line.textContent='▸ '+L[0];
+    bootLog.appendChild(line);
+    bootFill.style.width=((i+1)/BOOT_LINES.length*100)+'%';
+    setTimeout(function(){
+      if(L[1]){
+        var tag=document.createElement('span');
+        tag.className=L[1]; tag.textContent='['+L[2]+']';
+        line.appendChild(tag);
+      }
+      setTimeout(function(){ runBoot(i+1); },180);
+    },220);
+  })(0);
+  bootEl.addEventListener('click',finishBoot);
+})();
+</script>
+
+<script>
+/* ============================================================
+   第二部分 · guard.js v9 · DevTools 防护（Safari 兼容最终版）
+
+   检测矩阵：
+   1  debugger 计时        通用        阈值 120ms
+   2  console getter ×3    Safari/通用 log+dir+info 并发
+   3  窗口尺寸差           通用        阈值 200px
+   4  Safari 专项 ×4       native code / 全局标志 / 属性数 / 栈帧
+   5  console 重写         引用对比 + toString 长度
+   6  阅读器视图 URL       about:reader / safari-reader:（直接冻结）
+
+   防御逻辑：启动宽限 3s → 连续 2 次命中 → 警戒条 3s 倒计时 → 冻结
+   ============================================================ */
+(function(){
+  'use strict';
+
+  var GRACE=3, PATROL=1000, STARTUP_DELAY=3000, HITS_REQUIRED=2,
+      TIMING_THRESHOLD=120, SIZE_THRESHOLD=200;
+
+  var V=document.getElementById('veil'),
+      WARN=document.getElementById('devwarn'),
+      DW_BAR=document.getElementById('dw-progress'),
+      DW_N=null, DW_MSG=document.getElementById('dw-msg');
+
+  var frozen=false, warning=false, deadline=0,
+      warnTimer=null, barTimer=null, lastSeen=0,
+      probeFlag=false, hitCount=0, startTime=Date.now(),
+      noop=function(){};
+
+  /* ================= 冻结 ================= */
+  function freeze(){
+    if(frozen) return;
+    frozen=true;
+    hideWarn();
+    document.body.classList.add('frozen');
+    if(V) V.hidden=false;
+    try{
+      if(window.__ws){
+        window.__ws.onmessage=noop;
+        window.__ws.onclose=noop;
+        window.__ws.onerror=noop;
+        window.__ws.close();
+      }
+    }catch(e){}
+    var maxId=setTimeout(noop,0);
+    for(var i=1;i<=maxId;i++) clearInterval(i);
+    window.setInterval=function(){return 0;};
+    window.setTimeout=function(){return 0;};
+    window.requestAnimationFrame=function(){return 0;};
+  }
+  window.__frozen=function(){return frozen;};
+
+  /* ================= 警戒条 ================= */
+  function showWarn(){
+    if(frozen||warning) return;
+    warning=true;
+    deadline=Date.now()+GRACE*1000;
+
+    if(!WARN){
+      WARN=document.createElement('div');
+      WARN.id='devwarn'; WARN.className='devwarn';
+      WARN.innerHTML=
+        '<div class="devwarn-in">'+
+          '<span class="dw-ico">⚠</span>'+
+          '<div class="dw-txt"><b>检测到开发者工具</b>'+
+          '<span id="dw-msg">页面将在 <i id="dw-n">'+GRACE+'</i> 秒后冻结</span></div>'+
+          '<button class="dw-btn" id="dw-cancel">我关错了</button>'+
+        '</div><i class="dw-progress" id="dw-progress"></i>';
+      document.body.appendChild(WARN);
+      DW_BAR=document.getElementById('dw-progress');
+      DW_MSG=document.getElementById('dw-msg');
+      var cb=document.getElementById('dw-cancel');
+      if(cb) cb.addEventListener('click',function(){hideWarn();lastSeen=0;});
+    }else{
+      WARN.hidden=false;
+    }
+
+    if(DW_MSG)
+      DW_MSG.innerHTML='页面将在 <i id="dw-n">'+GRACE+'</i> 秒后冻结更新，关闭调试工具可撤销';
+    DW_N=document.getElementById('dw-n');
+    if(DW_BAR) DW_BAR.style.width='100%';
+
+    warnTimer=setInterval(function(){
+      var left=Math.max(0,Math.ceil((deadline-Date.now())/1000));
+      if(DW_N) DW_N.textContent=left;
+      if(left<=0){hideWarn();freeze();}
+    },200);
+
+    if(DW_BAR){
+      barTimer=setInterval(function(){
+        DW_BAR.style.width=Math.max(0,(deadline-Date.now())/(GRACE*1000)*100)+'%';
+      },100);
+    }
+  }
+
+  function hideWarn(){
+    warning=false; hitCount=0;
+    if(warnTimer){clearInterval(warnTimer);warnTimer=null;}
+    if(barTimer){clearInterval(barTimer);barTimer=null;}
+    if(WARN) WARN.hidden=true;
+  }
+
+  var cancelBtn=document.getElementById('dw-cancel');
+  if(cancelBtn) cancelBtn.addEventListener('click',function(){hideWarn();lastSeen=0;});
+
+  /* ================= 检测 1：debugger 计时 ================= */
+  function timingCheck(){
+    var s=performance.now();
+    (function(){}).constructor('debugger')();
+    return performance.now()-s>TIMING_THRESHOLD;
+  }
+
+  /* ================= 检测 2：console getter（三方法并发） ================= */
+  var probe=document.createElement('div');
+  try{
+    Object.defineProperty(probe,'id',{
+      get:function(){probeFlag=true;return 'hm-probe';}
+    });
+  }catch(e){}
+  function consoleCheck(){
+    probeFlag=false;
+    try{
+      console.log(probe);
+      console.dir(probe);
+      console.info(probe);
+      console.clear();
+    }catch(e){}
+    return probeFlag;
+  }
+
+  /* ================= 检测 3：窗口尺寸差 ================= */
+  function sizeCheck(){
+    if(innerWidth<640) return false;
+    return (outerWidth-innerWidth>SIZE_THRESHOLD)||
+           (outerHeight-innerHeight>SIZE_THRESHOLD);
+  }
+
+  /* ================= 检测 4：Safari Web Inspector 专项 ================= */
+  function safariCheck(){
+    try{
+      var logStr=Function.prototype.toString.call(console.log);
+      if(logStr.indexOf('[native code]')===-1) return true;
+      if(window.__webKitInspectorIsOpen) return true;
+      if(Object.keys(console).length>30) return true;
+      var stack=new Error().stack||'';
+      if(stack.indexOf('webkit-inspector')>-1) return true;
+      if(stack.indexOf('InjectedScript')>-1) return true;
+    }catch(e){return true;}
+    return false;
+  }
+
+  /* ================= 检测 5：console 方法重写 ================= */
+  var _origLog=console.log;
+  function consoleRewriteCheck(){
+    try{
+      if(console.log!==_origLog) return true;
+      if(Function.prototype.toString.call(console.log).length>200) return true;
+    }catch(e){return true;}
+    return false;
+  }
+
+  /* ================= 检测 6：Safari 阅读器视图 ================= */
+  function readerCheck(){
+    var href=location.href;
+    return href.indexOf('about:reader')===0||
+           href.indexOf('safari-reader:')===0;
+  }
+
+  /* ================= 巡逻循环 ================= */
+  function patrol(){
+    if(frozen) return;
+    if(readerCheck()){freeze();return;}          /* 阅读器：直接冻结 */
+    if(Date.now()-startTime<STARTUP_DELAY) return;
+
+    var hit=false;
+    try{
+      hit=timingCheck()||consoleCheck()||sizeCheck()||safariCheck()||consoleRewriteCheck();
+    }catch(e){}
+
+    if(hit){
+      hitCount++; lastSeen=Date.now();
+      if(hitCount>=HITS_REQUIRED) showWarn();
+    }else{
+      hitCount=0;
+      if(warning&&Date.now()-lastSeen>2000) hideWarn();
+    }
+  }
+  setInterval(patrol,PATROL);
+  setTimeout(function(){patrol();},STARTUP_DELAY+200);
+  if(readerCheck()) freeze();                    /* 加载时立即检查 */
+
+  /* ================= resize 即时检测 ================= */
+  addEventListener('resize',function(){
+    if(frozen||Date.now()-startTime<STARTUP_DELAY) return;
+    if(sizeCheck()){
+      hitCount++; lastSeen=Date.now();
+      if(hitCount>=HITS_REQUIRED) showWarn();
+    }
+  });
+
+  /* ================= 快捷键拦截 ================= */
+  addEventListener('keydown',function(e){
+    var k=(e.key||'').toUpperCase(),
+        meta=e.metaKey, ctrl=e.ctrlKey, shift=e.shiftKey, alt=e.altKey,
+        blocked=false;
+    if(k==='F12') blocked=true;
+    if(meta&&alt&&'IJKCU'.indexOf(k)>-1) blocked=true;
+    if(meta&&shift&&'IJCU'.indexOf(k)>-1) blocked=true;
+    if(ctrl&&shift&&'IJC'.indexOf(k)>-1) blocked=true;
+    if(ctrl&&!shift&&!alt&&k==='U') blocked=true;
+    if(blocked){
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+      lastSeen=Date.now();
+      showWarn();
+    }
+  },true);
+
+  /* ================= 右键 / 拖拽 / 选择 ================= */
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('dragstart',function(e){e.preventDefault();});
+  document.addEventListener('selectstart',function(e){
+    if(e.target.closest&&e.target.closest('input,textarea')) return;
+    e.preventDefault();
+  });
+})();
+</script>
+</body>
+</html>

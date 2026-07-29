@@ -1,4 +1,4 @@
-
+// ===== 背景粒子 =====
 (function() {
   var container = document.getElementById('particles');
   if (!container) return;
@@ -15,6 +15,7 @@
   }
 })();
 
+// ===== 终端打字效果 =====
 (function() {
   var body = document.getElementById('termBody');
   if (!body) return;
@@ -52,6 +53,7 @@
   setTimeout(type, 400);
 })();
 
+// ===== 名人名言打字轮播 =====
 (function() {
   var el = document.getElementById('bioText');
   if (!el) return;
@@ -102,13 +104,13 @@
   typeQuote(function() { setTimeout(nextQuote, 5000); });
 })();
 
-var _tr_usler_build = '0x1';
-
+// ===== 延迟模拟 =====
 setInterval(function() {
   var el = document.getElementById('lat');
   if (el) el.textContent = Math.floor(Math.random() * 15) + 15;
 }, 2000);
 
+// ===== 版权年份 =====
 (function() {
   var el = document.getElementById('year');
   if (el) el.textContent = new Date().getFullYear();

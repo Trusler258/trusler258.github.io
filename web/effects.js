@@ -1,4 +1,4 @@
-
+/* ========== 自定义光标 ========== */
 (function() {
   var style = document.createElement('style');
   style.textContent = [
@@ -43,6 +43,7 @@
     ix = mx; iy = my;
   });
 
+  // Check if hovering interactive elements
   document.querySelectorAll('a, button, input, textarea, .proj-item, .s-btn, .blog-nav-item, .pane-btn, .tool-btn, .copy-btn, .convert-tab').forEach(function(el) {
     el.addEventListener('mouseenter', function() { hovering = true; });
     el.addEventListener('mouseleave', function() { hovering = false; });
@@ -70,6 +71,7 @@
   requestAnimationFrame(animate);
 })();
 
+/* ========== 鼠标拖尾 ========== */
 (function() {
   var trailContainer = document.createElement('div');
   trailContainer.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;';
@@ -130,6 +132,7 @@
   requestAnimationFrame(updateTrail);
 })();
 
+/* ========== 增强背景粒子 ========== */
 (function() {
   var container = document.getElementById('particles');
   if (!container) {
@@ -140,8 +143,10 @@
     document.body.insertBefore(container, document.body.firstChild);
   }
 
+  // 清理现有粒子
   container.innerHTML = '';
 
+  // 小光点粒子
   for (var i = 0; i < 25; i++) {
     var p = document.createElement('div');
     p.className = 'particle';
@@ -155,6 +160,7 @@
     container.appendChild(p);
   }
 
+  // 大型明亮浮游光球
   for (var j = 0; j < 6; j++) {
     var bp = document.createElement('div');
     var bSize = Math.random() * 250 + 150;
@@ -177,6 +183,7 @@
     container.appendChild(bp);
   }
 
+  // 扫描线覆盖层
   var scan = document.createElement('div');
   scan.style.cssText = [
     'position:fixed;top:0;left:0;width:100%;height:100%;',
@@ -186,6 +193,7 @@
   ].join('');
   container.appendChild(scan);
 
+  // 四角发光
   var corners = [
     { top: '-10%', left: '-10%', size: '400px' },
     { top: '-10%', right: '-10%', size: '350px' },
@@ -211,6 +219,7 @@
     container.appendChild(c);
   });
 
+  // 随机闪烁的数据点
   for (var d = 0; d < 15; d++) {
     var dp = document.createElement('div');
     dp.style.cssText = [
@@ -227,12 +236,4 @@
     ].join('');
     container.appendChild(dp);
   }
-
-  var __tr_usler_init = function() {
-    var _tr_usler_el = document.querySelector('[data-tr-usler]');
-    if (_tr_usler_el) {
-      _tr_usler_el.style.setProperty('--_tr_usler_load', '1');
-    }
-  };
-  __tr_usler_init();
 })();

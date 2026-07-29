@@ -98,7 +98,7 @@
 }
 </style>
 </head>
-<body data-tr-usler>
+<body>
 
 <div class="rainbow-line"></div>
 
@@ -163,13 +163,13 @@ function renderMarkdown(md) {
     if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
       if (!inTable) { inTable = true; tableHtml = ''; }
       var cells = line.split('|').filter(function(c) { return c.trim(); });
-      if (cells.every(function(c) { return /^[-: ]+$/.test(c.trim()); })) { tableHtml += ''; continue; }
-      var tag = (tableHtml.indexOf('<th') === -1 && tableHtml.indexOf('') === -1) ? 'th' : 'td';
+      if (cells.every(function(c) { return /^[-: ]+$/.test(c.trim()); })) { tableHtml += '<!--sep-->'; continue; }
+      var tag = (tableHtml.indexOf('<th') === -1 && tableHtml.indexOf('<!--sep-->') === -1) ? 'th' : 'td';
       tableHtml += '<tr>';
       cells.forEach(function(c) { tableHtml += '<' + tag + '>' + parseInline(c.trim()) + '</' + tag + '>'; });
       tableHtml += '</tr>';
       if (i + 1 >= lines.length || !(lines[i+1].trim().startsWith('|') && lines[i+1].trim().endsWith('|'))) {
-        var parts = tableHtml.split('');
+        var parts = tableHtml.split('<!--sep-->');
         html += '<table>' + (parts[0] || '') + (parts[1] || '') + '</table>';
         inTable = false; tableHtml = '';
       }
