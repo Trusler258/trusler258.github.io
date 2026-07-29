@@ -3841,6 +3841,7 @@ var categories = [
   var activeCat = 0;
 
   function showArticle(idx) {
+    window.scrollTo(0, 0);
     content.innerHTML = renderMarkdown(articles[idx]);
     if (typeof hljs !== 'undefined') {
       content.querySelectorAll('pre code').forEach(function(el) { hljs.highlightElement(el); });
@@ -3849,7 +3850,6 @@ var categories = [
     content.style.animation = 'none';
     content.offsetHeight;
     content.style.animation = 'fadeUp .4s ease both';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     var items = document.querySelectorAll('.blog-nav-item');
     items.forEach(function(item) {
       item.classList.toggle('active', parseInt(item.getAttribute('data-idx')) === idx);
