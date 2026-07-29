@@ -1229,7 +1229,9 @@ setenforce 0
 > 
 > 把 `SELINUX=enforcing` 改成 `SELINUX=disabled`。
 >
-> 改完后用 `getenforce` 验证，应该输出 `Permissive`。
+> 改完后**重启生效**，`getenforce` 将输出 `Disabled`（而不是 `Permissive`）。
+>
+> 注意区分：`setenforce 0` 只是临时放宽（输出 `Permissive`），改配置文件才是永久关闭（输出 `Disabled`）。
 
 **三台机器都要做！** slave 节点也别漏，否则 DataNode 可能注册不上。
 
