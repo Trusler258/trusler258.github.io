@@ -132,7 +132,7 @@ main {
 h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4px; }
 .nick { color: var(--muted); font-family: var(--fm); font-size: 12px; margin-bottom: 6px; }
 .tagline { color: var(--highlight); font-family: var(--fm); font-size: 12px; margin-bottom: 18px; }
-.bio { color: var(--soft); font-size: 13px; line-height: 1.7; margin-bottom: 28px; min-height: 60px; }
+.bio { color: var(--soft); font-size: 13px; line-height: 1.7; margin-bottom: 28px; min-height: 88px; }
 
 .social-links { display: flex; flex-direction: column; gap: 10px; }
 .s-btn {
