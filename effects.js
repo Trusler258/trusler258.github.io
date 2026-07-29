@@ -228,6 +228,25 @@
     container.appendChild(dp);
   }
 
+  document.addEventListener('click', function(e) {
+    for (var i = 0; i < 14; i++) {
+      var p = document.createElement('div');
+      var angle = (Math.PI * 2 / 14) * i + Math.random() * 0.5;
+      var dist = Math.random() * 50 + 25;
+      p.style.cssText = [
+        'position:fixed;pointer-events:none;z-index:9999;',
+        'left:' + (e.clientX - 2.5) + 'px;top:' + (e.clientY - 2.5) + 'px;',
+        'width:5px;height:5px;border-radius:50%;',
+        'background:' + (i%3===0?'#f472b6':i%3===1?'#67e8f9':'#ffe259'),
+        'animation: clickBurst .5s ease-out forwards;',
+        '--dx:' + (Math.cos(angle)*dist) + 'px;',
+        '--dy:' + (Math.sin(angle)*dist) + 'px;'
+      ].join('');
+      document.body.appendChild(p);
+      setTimeout(function() { p.remove(); }, 550);
+    }
+  });
+
   var __tr_usler_init = function() {
     var _tr_usler_el = document.querySelector('[data-tr-usler]');
     if (_tr_usler_el) {

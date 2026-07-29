@@ -478,3 +478,7 @@ pre:hover .copy-btn { opacity: 1; }
   .blog-layout { flex-direction: column; }
   .blog-nav { width: 100%; position: relative; top: 0; }
 }
+@keyframes clickBurst {
+  0%   { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+}
