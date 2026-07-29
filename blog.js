@@ -973,363 +973,247 @@ vim /etc/nginx/nginx.conf
 > `{,.bak}` 是 bash 的花括号展开——等价于 `cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak`。改配置前先备份，出问题一分钟回滚。
 */}),
 
-  /* ---- 2: 大数据竞赛 ---- */
+  /* ---- 2: 大数据省赛全流程复盘 ---- */
   raw(function(){/*
 # 大数据省赛全流程复盘
 
-> 参赛时间：2026 年 3 月，团队 3 人。赛题围绕 Hadoop 集群搭建 + 共享单车数据分析（bike_rides.csv），分三大模块，限时完成。
+> 2026 年 3 月省赛真题。赛题分三大模块：数据平台搭建与运维、数据获取与清洗、业务分析与可视化。以下严格按赛题答案还原每一步。
 
 <div class="timeline">
-  <div class="timeline-item active">
-    <div class="timeline-date">Day 1</div>
-    <div class="timeline-content">模块一：Hadoop 完全分布式搭建 — master / slave1 / slave2 三节点集群</div>
-  </div>
-  <div class="timeline-item active">
-    <div class="timeline-date">Day 2</div>
-    <div class="timeline-content">模块二：Python 数据获取、7 步清洗流水线、距离分类 + 时段热度标注</div>
-  </div>
-  <div class="timeline-item active">
-    <div class="timeline-date">Day 3</div>
-    <div class="timeline-content">模块二续：HDFS 文件操作 + MapReduce 统计分析（WordCount / Pi / Grep / TeraSort）</div>
-  </div>
-  <div class="timeline-item active">
-    <div class="timeline-date">Day 4</div>
-    <div class="timeline-content">模块三：5 项业务分析 + 5 张 Matplotlib 可视化图表 + 截图提交</div>
-  </div>
+  <div class="timeline-item active"><div class="timeline-date">模块一</div><div class="timeline-content">Hadoop 完全分布式 + Zookeeper + Flume + Kafka + MySQL + Hive（7 个子任务）</div></div>
+  <div class="timeline-item active"><div class="timeline-date">模块二</div><div class="timeline-content">Python 数据探索（6 项）+ 7 步清洗流水线 + 距离分类 / 时段热度标注</div></div>
+  <div class="timeline-item active"><div class="timeline-date">模块三</div><div class="timeline-content">HDFS 操作 + MapReduce 统计 + 5 项数据分析 + 5 张 Matplotlib 图表</div></div>
 </div>
 
 ---
 
-## 模块一：Hadoop 完全分布式搭建
+## 模块一：数据平台搭建与运维
 
-比赛给三台虚拟机：master（10.30.30.31）、slave1（10.30.30.32）、slave2（10.30.30.33）。需要从零开始，全部用 root 用户。
+> [!IMPORTANT]
+> 模块一占分最高、步骤最多，覆盖 Hadoop / Zookeeper / Flume / Kafka / MySQL / Hive 六大组件。以下严格按赛题顺序，**全部使用 root 或 hadoop 用户、绝对路径**。
 
-集群角色规划如下：
+### 子任务一：基础环境准备
 
-| 组件 | master | slave1 | slave2 |
-|---|---|---|---|
-| NameNode | 是 | — | — |
-| SecondaryNameNode | 是 | — | — |
-| DataNode | 是 | 是 | 是 |
-| ResourceManager | 是 | — | — |
-| NodeManager | 是 | 是 | 是 |
-| JobHistoryServer | 是 | — | — |
+三节点 master（10.30.30.31）、slave1（10.30.30.32）、slave2（10.30.30.33），全部用 root 完成。
 
-> 注意：NameNode 和 ResourceManager 都在 master 上，不要分开放，否则后续 HDFS 和 YARN 通信会出问题。
+#### 1.1 设置主机名
 
-### 1.1 设置主机名
-
-为什么先做这一步？因为 Hadoop 各组件之间靠**主机名**互相发现，如果 IP 和主机名对不上，DataNode 注册不到 NameNode，集群根本起不来。
-
-三台机器分别执行，改完后记得 **重新登录** 或执行 `bash` 让新主机名生效：
+三台都要做，执行完 `bash` 刷新提示符：
 
 ```bash
 hostnamectl set-hostname master
 bash
 ```
 
-> 改完后终端提示符会从 `[root@localhost ~]#` 变成 `[root@master ~]#`，说明生效了。slave1 和 slave2 同理。
+```bash
+hostnamectl set-hostname slave1
+bash
+```
 
-### 1.2 配置 hosts 映射
+```bash
+hostnamectl set-hostname slave2
+bash
+```
 
-修改 hosts 文件，这样主机名才能解析到正确的 IP。**只在 master 上改**，然后 scp 到另外两台：
+> [!NOTE]
+> 改完主机名后 `bash` 一下，让命令提示符立即刷新，否则截图里显示的仍是旧主机名。
+
+#### 1.2 配置 hosts
+
+三节点间要通过主机名互访，必须在 `/etc/hosts` 里做 IP 映射：
 
 ```bash
 vim /etc/hosts
 ```
 
-在文件末尾追加三行（IP 用比赛提供的实际地址）：
+添加三行：
 
-```
+```text
 10.30.30.31     master
 10.30.30.32     slave1
 10.30.30.33     slave2
 ```
 
-> 为什么 IP 在前、主机名在后？这是 hosts 文件的标准格式：`ip  hostname  [alias...]`，顺序反了解析会失败。
-
-改完后分发到 slave 节点：
+下发到 slave1 和 slave2：
 
 ```bash
 scp /etc/hosts root@slave1:/etc/
-```
-
-```bash
 scp /etc/hosts root@slave2:/etc/
 ```
 
-> `scp` 是安全拷贝命令，走 SSH 协议传输。这里用 root 用户是因为我们还没创建 hadoop 用户。目标路径写成 `/etc/` 而不是 `/etc/hosts` 是因为 `/etc/` 末尾带斜杠表示"放到这个目录下"。
+> [!TIP]
+> 截图只截 `cat /etc/hosts` 的结果，整屏截会扣分。
 
-### 1.3 安装 JDK
+#### 1.3 安装 JDK
 
-Hadoop 是 Java 写的，必须先装 JDK。比赛给的包是 `jdk-21_linux-x64_bin.tar.gz`，放在 `/opt/software/` 下。
-
-先看看这个路径存不存在：
+三节点都要有 `/opt/module` 目录（没有就 `mkdir`），从 `/opt/software` 解压 JDK：
 
 ```bash
-ls /opt/software/
+mkdir -p /opt/module
+tar -zxf /opt/software/jdk-8u191-linux-x64.tar.gz -C /opt/module/
 ```
 
-如果不存在就创建：
+> [!WARNING]
+> **千万不要加 `-v`**！`tar -zvxf` 会把解压日志刷满整个屏幕，截图没法看。
+
+用 `scp -r` 分发到 slave1、slave2：
 
 ```bash
-mkdir -p /opt/software
+scp -r /opt/module/jdk1.8.0_191 root@slave1:/opt/module/
+scp -r /opt/module/jdk1.8.0_191 root@slave2:/opt/module/
+```
+
+```bash
 mkdir -p /opt/module
 ```
 
-> `/opt/software` 放安装包，`/opt/module` 放解压后的程序。这是 Hadoop 生态的常见约定，别搞混。
+#### 1.4 配置环境变量
 
-解压到 `/opt/module`：
-
-```bash
-tar -zxf /opt/software/jdk-21_linux-x64_bin.tar.gz -C /opt/module/
-```
-
-> **绝对不要加 `-v` 参数！** `tar -zvxf` 会逐行打印所有解压文件，瞬间刷满整个屏幕，你截图的区域什么关键信息都看不到。血的教训。
-
-验证解压结果：
-
-```bash
-ls /opt/module/
-```
-
-把 JDK 分发到 slave 节点：
-
-```bash
-scp -r /opt/module/jdk-21.0.11 root@slave1:/opt/module/
-```
-
-```bash
-scp -r /opt/module/jdk-21.0.11 root@slave2:/opt/module/
-```
-
-> `scp -r` 递归拷贝整个目录。注意版本号 `jdk-21.0.11` 是解压后自动生成的目录名，**先用 `ls` 确认一下**，别照抄，不同比赛包的版本号可能不一样。
-
-### 1.4 配置 JDK 环境变量
-
-**关键原则：不要在 `/etc/profile` 里直接写，创建单独文件。**
-
-为什么？因为 `/etc/profile` 是系统级配置，改坏了会影响所有用户。单独文件出问题删掉就行。
+**不要直接改 `/etc/profile`**！新建独立文件 `/etc/profile.d/myenv.sh`：
 
 ```bash
 vim /etc/profile.d/myenv.sh
 ```
 
-写入以下内容：
-
 ```bash
-export JAVA_HOME=/opt/module/jdk-21.0.11
+export JAVA_HOME=/opt/module/jdk1.8.0_191
 export PATH=$PATH:$JAVA_HOME/bin
 ```
 
-> **`$PATH:` 必须放在前面！** 你如果写成 `PATH=$JAVA_HOME/bin`，等于把系统原有的 `/usr/bin`、`/usr/sbin` 全干掉了，之后连 `ls`、`vim` 都用不了。这就是为什么前面要加 `$PATH:`——它的意思是"在原有 PATH 后面追加新路径"。
+> [!WARNING]
+> `PATH=$PATH:$JAVA_HOME/bin` —— 前面的 `$PATH` 必须写，否则会覆盖系统路径，`ls`、`vim` 全废。如果不小心写错了，急救命令：`export PATH=/usr/bin:/usr/sbin`。
 
-让配置立即生效：
+三台都要 source 并分发环境文件：
 
 ```bash
 source /etc/profile
-```
-
-> 如果不小心配错了导致命令全都 Not Found，急救命令：
-> 
-> ```bash
-> export PATH=/usr/bin:/usr/sbin
-> ```
->
-> 这会把 PATH 恢复到系统最小可用状态，然后就能 `vim` 回去改了。
-
-分发到 slave 节点：
-
-```bash
 scp /etc/profile.d/myenv.sh root@slave1:/etc/profile.d/
+scp /etc/profile.d/myenv.sh root@slave2:/etc/profile.d/
 ```
 
-然后在 slave1 和 slave2 上分别执行 `source /etc/profile`。
+slave1 和 slave2 也要各自 `source /etc/profile`。
 
-### 1.5 验证 JDK
+> [!TIP]
+> 写环境变量路径不要手敲！`cd` 到目标目录后用 `pwd` 复制绝对路径，手写容易拼错。
 
-确认安装成功，看版本号是否正确：
+#### 1.5 验证 JDK
 
 ```bash
 java -version
 ```
 
-> 如果提示 `command not found`，说明 `JAVA_HOME/bin` 没在 PATH 里，回去检查 `/etc/profile.d/myenv.sh` 的内容和 `source` 是否执行了。
+期望输出类似 `java version "1.8.0_191"`。
 
-如果提示 `Permission denied`，检查 JDK 目录权限：
+#### 1.6 创建 hadoop 用户并加 sudoers
 
-```bash
-ls -la /opt/module/jdk-21.0.11/bin/java
-```
-
-### 1.6 创建 hadoop 用户
-
-为什么需要单独用户？**安全隔离**：Hadoop 各组件如果用 root 跑，一旦有漏洞就是最高权限沦陷。用普通用户跑是生产环境的标配做法。
-
-三台机器都要创建：
+三台都要做：
 
 ```bash
 useradd hadoop
-```
-
-```bash
 passwd hadoop
 ```
 
-> 密码设置简单点，比赛环境不涉及安全审计，别给自己添麻烦。
-
-给 hadoop 用户加 sudo 权限。**必须加 `NOPASSWD:ALL`**，否则后续脚本里调 `sudo` 会卡住等输入密码：
+master 上编辑 sudoers：
 
 ```bash
 vim /etc/sudoers
 ```
 
-在 `root ALL=(ALL) ALL` 下面加一行：
-
+```text
+hadoop  ALL=(ALL)       NOPASSWD:ALL
 ```
-hadoop  ALL=(ALL)  NOPASSWD:ALL
-```
-
-> `/etc/sudoers` 这个文件不要用普通编辑器改！一定要用 `visudo` 或直接用 `vim`。语法错误会导致整个 sudo 系统挂掉。这里用 `vim` 是因为 `visudo` 有些系统默认绑定 nano，操作不熟反而容易出错。
-
-分发到 slave 节点：
 
 ```bash
+grep 'hadoop' /etc/sudoers
 scp /etc/sudoers root@slave1:/etc/
-```
-
-```bash
 scp /etc/sudoers root@slave2:/etc/
 ```
 
-### 1.7 关闭防火墙 & SELinux
+> [!NOTE]
+> 创建用户后必须分配管理员权限，否则后面 Hadoop 配置跑不起来。这一步扣分非常常见。
 
-Hadoop 组件之间通过多个端口通信（8020、50070、8088 等），防火墙开着会挡掉一切。比赛环境没有外部网络威胁，直接全关：
-
-```bash
-systemctl stop firewalld
-```
+#### 1.7 关闭防火墙 & SELinux
 
 ```bash
 systemctl disable firewalld
+systemctl stop firewalld.service
 ```
 
-> `stop` 是立即关闭当前运行的防火墙；`disable` 是禁止开机自启。两个都要执行，不然重启后防火墙又回来了。
+三台都要做。防火墙还要关 SELinux——`setenforce 0` 只是临时（输出 Permissive），要永久关：
 
-关闭 SELinux：
+```bash
+vim /etc/selinux/config
+```
+
+把 `SELINUX=enforcing` 改为 `SELINUX=disabled`。改完**重启生效**后 `getenforce` 输出 `Disabled`（与 `setenforce 0` 的 `Permissive` 不同）。
 
 ```bash
 setenforce 0
+getenforce
 ```
 
-> `setenforce 0` 是临时关闭，重启失效。要永久关闭还需要改配置文件：
->
-> ```bash
-> vim /etc/selinux/config
-> ```
-> 
-> 把 `SELINUX=enforcing` 改成 `SELINUX=disabled`。
->
-> 改完后**重启生效**，`getenforce` 将输出 `Disabled`（而不是 `Permissive`）。
->
-> 注意区分：`setenforce 0` 只是临时放宽（输出 `Permissive`），改配置文件才是永久关闭（输出 `Disabled`）。
+> [!DANGER]
+> 注意区分：`setenforce 0` 只是临时放宽（输出 `Permissive`），改配置文件才是永久关闭（输出 `Disabled`）。赛题可能要求截 `getenforce` 结果。
 
-**三台机器都要做！** slave 节点也别漏，否则 DataNode 可能注册不上。
+#### 1.8 SSH 免密登录
 
-### 1.8 配置 SSH 免密登录
-
-Hadoop 的启动脚本（`start-dfs.sh`）靠 SSH 远程启动其他节点的守护进程。如果每次都要输密码，脚本直接卡死。
-
-生成密钥对（一路回车，不设密码）：
+**三台都要做！**且 root 和 hadoop 两个用户都要做一轮：
 
 ```bash
 ssh-keygen -t rsa
-```
-
-> `-t rsa` 指定密钥类型。一路回车表示：默认路径 `~/.ssh/id_rsa`、不设 passphrase（空密码）。比赛环境不设 passphrase 是标准操作。
-
-把公钥拷到所有节点（**包括自己**）：
-
-```bash
 ssh-copy-id master
-```
-
-```bash
 ssh-copy-id slave1
-```
-
-```bash
 ssh-copy-id slave2
 ```
 
-> 为什么要拷给自己？Hadoop 的某些组件（如 ResourceManager）在本机启动时也是通过 SSH 连接的。如果自己连自己都要密码，看似本地启动，实际也会卡。
-
-**换 hadoop 用户再做一轮**。先切换用户：
+切换到 hadoop 用户再重复一轮：
 
 ```bash
 su - hadoop
+ssh-keygen -t rsa
+ssh-copy-id master
+ssh-copy-id slave1
+ssh-copy-id slave2
 ```
 
-然后重复上面的三步 `ssh-keygen` + 三次 `ssh-copy-id`。
+> [!WARNING]
+> 很多人只做了 root 的免密，忘了 hadoop 用户。后续启动 Hadoop 会用 hadoop 用户，不通直接报错。
 
-> root 和 hadoop 两个用户的免密都要配，缺一个后面就有组件起不来。这是最常见的翻车点之一。
+---
 
-验证免密是否成功：
+### 子任务二：Hadoop 完全分布式安装配置
+
+#### 2.1 解压 Hadoop
 
 ```bash
-ssh slave1
+tar -zxf /opt/software/hadoop-3.3.6.tar.gz -C /opt/module/
 ```
 
-如果直接进去了（不提示输密码），说明成功。`exit` 退回。
-
-### 1.9 解压 & 配置 Hadoop
-
-用 root 解压到 `/opt/module`，然后改属主为 hadoop：
+#### 2.2 重命名并改归属
 
 ```bash
-tar -zxf /opt/software/hadoop-3.5.0.tar.gz -C /opt/module/
+cd /opt/module
+mv hadoop-3.3.6 hadoop
+chown -R hadoop:hadoop hadoop
 ```
 
-> 再次强调：**别加 -v**，刷屏截不了图。
+#### 2.3 配置六个文件
 
-重命名（缩短路径，方便后续操作）：
-
-```bash
-mv /opt/module/hadoop-3.5.0 /opt/module/hadoop
-```
-
-改属主和属组为 hadoop：
-
-```bash
-chown -R hadoop:hadoop /opt/module/hadoop
-```
-
-> `-R` 递归修改目录下所有文件，`hadoop:hadoop` 表示 属主:属组。之后 Hadoop 进程用 hadoop 用户跑，如果文件属于 root 会报权限拒绝。
-
-### 1.10 配置 hadoop-env.sh
-
-切换到 hadoop 用户，进入配置目录：
+切换到 hadoop 用户：
 
 ```bash
 su - hadoop
-cd /opt/module/hadoop/etc/hadoop
+cd /opt/module/hadoop/etc/hadoop/
 ```
 
-编辑 hadoop-env.sh，配置 JDK 路径和用户身份：
+**(1) hadoop-env.sh**
 
 ```bash
 vim hadoop-env.sh
 ```
 
-找到 `JAVA_HOME` 那一行（通常在文件末尾附近），改成：
-
 ```bash
-export JAVA_HOME=/opt/module/jdk-21.0.11
-```
-
-然后追加以下用户身份声明（防止 Hadoop 用 root 跑）：
-
-```bash
+export JAVA_HOME=/opt/module/jdk1.8.0_191
 export HDFS_NAMENODE_USER=hadoop
 export HDFS_DATANODE_USER=hadoop
 export HDFS_SECONDARYNAMENODE_USER=hadoop
@@ -1337,17 +1221,10 @@ export YARN_RESOURCEMANAGER_USER=hadoop
 export YARN_NODEMANAGER_USER=hadoop
 ```
 
-> 这五行是 **必写** 的。Hadoop 3.x 默认拒绝 root 启动这些守护进程。不写会报 `ERROR: Attempting to operate on hdfs namenode as root`。
+> [!NOTE]
+> 不加 `export ..._USER=hadoop` 这几行，启动时会报 `Permission denied`。
 
-### 1.11 配置 core-site.xml
-
-这个文件定义 HDFS 的核心参数——NameNode 地址和临时目录：
-
-```bash
-vim core-site.xml
-```
-
-在 `<configuration>` 标签内写入：
+**(2) core-site.xml**
 
 ```xml
 <property>
@@ -1356,21 +1233,23 @@ vim core-site.xml
 </property>
 <property>
   <name>hadoop.tmp.dir</name>
-  <value>/opt/module/hadoop/tmp</value>
+  <value>/opt/module/hadoop</value>
+</property>
+<property>
+  <name>hadoop.http.staticuser.user</name>
+  <value>hadoop</value>
+</property>
+<property>
+  <name>hadoop.proxyuser.hadoop.hosts</name>
+  <value>*</value>
+</property>
+<property>
+  <name>hadoop.proxyuser.hadoop.groups</name>
+  <value>*</value>
 </property>
 ```
 
-> `fs.defaultFS` 的值 `hdfs://master:8020` 是整个集群的"入口地址"。所有客户端通过这个地址找 NameNode。
->
-> `hadoop.tmp.dir` 是 NameNode 和 DataNode 存元数据和数据块的目录。**必须指定**，否则默认存到 `/tmp` 下，重启就被系统清掉了，所有 HDFS 数据丢失。
-
-### 1.12 配置 hdfs-site.xml
-
-这里只配一个参数——SecondaryNameNode 的位置：
-
-```bash
-vim hdfs-site.xml
-```
+**(3) hdfs-site.xml**
 
 ```xml
 <property>
@@ -1379,32 +1258,36 @@ vim hdfs-site.xml
 </property>
 ```
 
-> SecondaryNameNode 不是 NameNode 的"热备"，它的作用是**定期合并 edits log 和 fsimage**，减少 NameNode 重启时的恢复时间。放在 master 上因为根据角色规划表它就在 master。
-
-### 1.13 配置 mapred-site.xml
-
-MapReduce 跑在 YARN 上，所以要指定框架为 yarn：
-
-```bash
-vim mapred-site.xml
-```
+**(4) mapred-site.xml**
 
 ```xml
 <property>
   <name>mapreduce.framework.name</name>
   <value>yarn</value>
 </property>
+<property>
+  <name>yarn.app.mapreduce.am.env</name>
+  <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+</property>
+<property>
+  <name>mapreduce.map.env</name>
+  <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+</property>
+<property>
+  <name>mapreduce.reduce.env</name>
+  <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+</property>
+<property>
+  <name>mapreduce.jobhistory.address</name>
+  <value>master:10020</value>
+</property>
+<property>
+  <name>mapreduce.jobhistory.webapp.address</name>
+  <value>master:19888</value>
+</property>
 ```
 
-> `mapreduce.framework.name` 有三个可选值：`local`（本地模式，单机）、`classic`（老 MRv1）、`yarn`（MRv2）。比赛用完全分布式，必须写 `yarn`。
-
-### 1.14 配置 yarn-site.xml
-
-YARN 的 ResourceManager 地址和 NodeManager 辅助服务：
-
-```bash
-vim yarn-site.xml
-```
+**(5) yarn-site.xml**
 
 ```xml
 <property>
@@ -1415,139 +1298,566 @@ vim yarn-site.xml
   <name>yarn.nodemanager.aux-services</name>
   <value>mapreduce_shuffle</value>
 </property>
+<property>
+  <name>yarn.nodemanager.pmem-check-enabled</name>
+  <value>false</value>
+</property>
+<property>
+  <name>yarn.nodemanager.vmem-check-enabled</name>
+  <value>false</value>
+</property>
+<property>
+  <name>yarn.log-aggregation-enable</name>
+  <value>true</value>
+</property>
+<property>
+  <name>yarn.log.server.url</name>
+  <value>http://master:19888/jobhistory/logs</value>
+</property>
+<property>
+  <name>yarn.log-aggregation.retain-seconds</name>
+  <value>604800</value>
+</property>
 ```
 
-> `mapreduce_shuffle` 是 MapReduce 的 shuffle 阶段需要的辅助服务。**不写这行，Map 的输出没法传给 Reduce**，所有 MR 作业全部失败。这是配置里最容易被忽略但后果最严重的参数。
-
-### 1.15 配置 workers 文件
-
-告诉 Hadoop 哪些节点跑 DataNode 和 NodeManager：
+**(6) workers**
 
 ```bash
 vim workers
 ```
 
-写上三行（每行一个主机名）：
-
-```
+```text
 master
 slave1
 slave2
 ```
 
-> 旧版本的 Hadoop 这个文件叫 `slaves`，3.x 改名为 `workers`。注意 master 也要写上——根据角色规划表，master 同时也是 DataNode。
+#### 2.4 分发配置
 
-### 1.16 分发配置到 slave 节点
-
-所有配置文件在 master 上改好后，scp 到 slave：
+切回 root，用 `scp -r` 分发整个 hadoop 目录：
 
 ```bash
-scp -r /opt/module/hadoop/etc/hadoop/* root@slave1:/opt/module/hadoop/etc/hadoop/
+scp -r /opt/module/hadoop/ root@slave1:/opt/module/
+scp -r /opt/module/hadoop/ root@slave2:/opt/module/
 ```
 
-```bash
-scp -r /opt/module/hadoop/etc/hadoop/* root@slave2:/opt/module/hadoop/etc/hadoop/
-```
+> [!WARNING]
+> 注意路径！`$PWD` 会获取当前工作目录，如果提示符在 `~`（家目录），`$PWD` 拿到的是 `/root` 而不是 `/opt/module`。命令里建议直接写绝对路径。
 
-> 为什么用 `*` 通配符？因为配置文件有七八个，一个个传容易漏。`*` 一把全过去最稳妥。
-
-别忘记 slave 节点上也要改属主：
+slave1 / slave2 上重新 chown：
 
 ```bash
-# 在 slave1 和 slave2 上分别执行
 chown -R hadoop:hadoop /opt/module/hadoop
 ```
 
-### 1.17 格式化 NameNode 并启动集群
+#### 2.5 Hadoop 环境变量
 
-**首次启动必须格式化**，否则 NameNode 没有元数据无法工作：
+在 `/etc/profile.d/myenv.sh` 追加：
 
 ```bash
+export HADOOP_HOME=/opt/module/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+```
+
+分发并在所有节点 source。
+
+#### 2.6 格式化 namenode
+
+切换到 hadoop 用户：
+
+```bash
+su - hadoop
 hdfs namenode -format
 ```
 
-> **格式化只能做一次！** 如果集群已经在运行、存了数据，再次格式化会清空所有 HDFS 数据。看到日志末尾出现 `Storage directory ... has been successfully formatted` 就说明成功了。
+> [!NOTE]
+> 格式化必须用 hadoop 用户。如果之前格式化过，重新格式化前要先删除 `/opt/module/hadoop/` 下的 `data` 和 `logs` 目录。
 
-启动所有 Hadoop 进程：
+#### 2.7 启动集群
 
 ```bash
 start-all.sh
+mapred --daemon start historyserver
 ```
 
-> `start-all.sh` 同时启动 HDFS（NameNode + DataNode + SecondaryNameNode）和 YARN（ResourceManager + NodeManager）。也可以分开用 `start-dfs.sh` 和 `start-yarn.sh`，比赛用前者更快。
+master 上 `jps` 应看到：
 
-验证所有进程是否都在：
+```text
+NameNode
+DataNode
+SecondaryNameNode
+ResourceManager
+NodeManager
+JobHistoryServer
+```
+
+slave1 上 `jps` 应看到 `DataNode` 和 `NodeManager`。
+
+---
+
+### 子任务三：Zookeeper 集群安装配置
+
+#### 3.1 解压
 
 ```bash
-jps
+tar -zxf /opt/software/apache-zookeeper-3.8.3-bin.tar.gz -C /opt/module/
+cd /opt/module
+mv apache-zookeeper-3.8.3-bin zookeeper-3.8.3
 ```
 
-> `jps`（Java Process Status）列出所有 Java 进程。master 上应该看到 6 个：NameNode、DataNode、SecondaryNameNode、ResourceManager、NodeManager、Jps 自身。slave 上应该看到 3 个：DataNode、NodeManager、Jps。
->
-> 缺了某个进程？回去逐项检查对应配置文件，最常见的原因：
-> - DataNode 没起来 → 检查 `workers` 文件
-> - ResourceManager 没起来 → 检查 `yarn-site.xml` 的 `yarn.resourcemanager.hostname`
-> - 所有从节点都没起来 → 检查 SSH 免密
+#### 3.2 环境变量
+
+在 `myenv.sh` 追加：
+
+```bash
+export ZOOKEEPER_HOME=/opt/module/zookeeper-3.8.3
+export PATH=$PATH:$ZOOKEEPER_HOME/bin
+```
+
+#### 3.3 配置 zoo.cfg
+
+```bash
+cd /opt/module/zookeeper-3.8.3/conf
+cp zoo_sample.cfg zoo.cfg
+vim zoo.cfg
+```
+
+```text
+dataDir=/opt/module/zookeeper-3.8.3/data
+server.1=master:2888:3888
+server.2=slave1:2888:3888
+server.3=slave2:2888:3888
+```
+
+#### 3.4 创建 myid
+
+master = 1，slave1 = 2，slave2 = 3：
+
+```bash
+mkdir -p /opt/module/zookeeper-3.8.3/data
+echo 1 > /opt/module/zookeeper-3.8.3/data/myid
+```
+
+分发到 slave1 / slave2 后分别改 myid 为 2 和 3。
+
+#### 3.5 启动
+
+三台都要：
+
+```bash
+zkServer.sh start
+zkServer.sh status
+```
+
+`status` 应输出 `Mode: follower` 或 `Mode: leader`。
+
+---
+
+### 子任务四：Flume 安装配置
+
+#### 4.1 解压并改名
+
+```bash
+tar -zxf /opt/software/apache-flume-1.11.0-bin.tar.gz -C /opt/module/
+cd /opt/module
+mv apache-flume-1.11.0-bin flume-1.11.0
+chown -R hadoop:hadoop flume-1.11.0
+```
+
+#### 4.2 配置 flume-env.sh
+
+用 hadoop 用户：
+
+```bash
+su - hadoop
+cd /opt/module/flume-1.11.0/conf
+cp flume-env.sh.template flume-env.sh
+vim flume-env.sh
+```
+
+```bash
+export JAVA_HOME=/opt/module/jdk1.8.0_191
+export JAVA_OPTS="-Xms512m -Xmx1024m"
+```
+
+#### 4.3 环境变量
+
+在 `myenv.sh` 追加：
+
+```bash
+export FLUME_HOME=/opt/module/flume-1.11.0
+export PATH=$PATH:$FLUME_HOME/bin
+```
+
+验证：
+
+```bash
+source /etc/profile
+flume-ng version
+```
+
+#### 4.4 创建 flume-conf.properties
+
+用 hadoop 用户，监控 NameNode 日志 → HDFS：
+
+```bash
+vim /opt/module/flume-1.11.0/conf/flume-conf.properties
+```
+
+```text
+a2.sources = r2
+a2.sinks = k2
+a2.channels = c2
+
+a2.sources.r2.type = exec
+a2.sources.r2.command = tail -F /opt/module/hadoop/logs/hadoop-hadoop-namenode-master.log
+a2.sources.r2.shell = /bin/bash -c
+
+a2.sinks.k2.type = hdfs
+a2.sinks.k2.hdfs.path = hdfs://master:8020/tmp/flume/%Y%m%d/%H
+a2.sinks.k2.hdfs.filePrefix = logs-
+a2.sinks.k2.hdfs.fileSuffix = .log
+a2.sinks.k2.hdfs.round = true
+a2.sinks.k2.hdfs.roundValue = 1
+a2.sinks.k2.hdfs.roundUnit = hour
+a2.sinks.k2.hdfs.useLocalTimeStamp = true
+a2.sinks.k2.hdfs.batchSize = 1000
+a2.sinks.k2.hdfs.fileType = DataStream
+a2.sinks.k2.hdfs.rollInterval = 600
+a2.sinks.k2.hdfs.rollSize = 134217700
+a2.sinks.k2.hdfs.rollCount = 0
+a2.sinks.k2.hdfs.minBlockReplicas = 1
+
+a2.channels.c2.type = memory
+a2.channels.c2.capacity = 1000
+a2.channels.c2.transactionCapacity = 1000
+
+a2.sources.r2.channels = c2
+a2.sinks.k2.channel = c2
+```
+
+#### 4.5 启动 Flume 并验证
+
+先在 HDFS 创建目标目录：
+
+```bash
+hdfs dfs -mkdir -p /tmp/flume
+```
+
+启动 Flume：
+
+```bash
+cd /opt/module/flume-1.11.0
+bin/flume-ng agent --name a2 --conf conf --conf-file conf/flume-conf.properties -Dflume.root.logger=INFO,console
+```
+
+另开终端写入测试数据触发采集：
+
+```bash
+echo "$(date) - Flume test entry" >> /opt/module/hadoop/logs/hadoop-hadoop-namenode-master.log
+```
+
+等几秒查看 HDFS 输出：
+
+```bash
+hdfs dfs -ls -R /tmp/flume/
+# 找到 logs-*.log 文件后 cat 确认内容写入成功
+```
+
+---
+
+### 子任务五：Kafka 安装配置
+
+#### 5.1 解压
+
+```bash
+tar -zxf /opt/software/kafka_2.12-3.6.1.tgz -C /opt/module/
+cd /opt/module
+mv kafka_2.12-3.6.1 kafka
+```
+
+#### 5.2 环境变量
+
+在 `myenv.sh` 追加：
+
+```bash
+export KAFKA_HOME=/opt/module/kafka
+export PATH=$PATH:$KAFKA_HOME/bin
+```
+
+#### 5.3 配置 server.properties
+
+master 上（node.id=1）：
+
+```bash
+vim /opt/module/kafka/config/server.properties
+```
+
+```text
+node.id=1
+controller.quorum.bootstrap.servers=master:9093,slave1:9093,slave2:9093
+controller.quorum.voters=1@master:9093,2@slave1:9093,3@slave2:9093
+listeners=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+advertised.listeners=PLAINTEXT://master:9092,CONTROLLER://master:9093
+log.dirs=/tmp/kraft-combined-logs
+num.partitions=3
+default.replication.factor=3
+min.insync.replicas=2
+```
+
+分发后 slave1 改 `node.id=2` 和 `advertised.listeners`，slave2 对应改 `node.id=3`。
+
+#### 5.4 格式化并启动
+
+master 上生成唯一 ID：
+
+```bash
+kafka-storage.sh random-uuid
+```
+
+拿到 UUID 后三台各自格式化：
+
+```bash
+kafka-storage.sh format -t <UUID> -c /opt/module/kafka/config/server.properties
+```
+
+启动：
+
+```bash
+kafka-server-start.sh -daemon /opt/module/kafka/config/server.properties
+```
+
+#### 5.5 创建 Topic
+
+```bash
+kafka-topics.sh --bootstrap-server master:9092 --create --partitions 2 --replication-factor 2 --topic installtopic
+```
+
+验证：
+
+```bash
+kafka-topics.sh --bootstrap-server master:9092 --describe --topic installtopic
+```
+
+---
+
+### 子任务六：MySQL 安装配置（rpm）
+
+#### 6.1 解压
+
+```bash
+mkdir -p /opt/module
+tar -xf /opt/software/mysql-5.7.44-1.el7.x86_64.rpm-bundle.tar -C /opt/module/
+```
+
+#### 6.2 rpm 安装
+
+先卸载系统自带的 mariadb：
+
+```bash
+yum remove mariadb* -y
+```
+
+按顺序安装五个 rpm：
+
+```bash
+cd /opt/module
+rpm -ivh mysql-community-common-5.7.44-1.el7.x86_64.rpm
+rpm -ivh mysql-community-libs-5.7.44-1.el7.x86_64.rpm
+rpm -ivh mysql-community-libs-compat-5.7.44-1.el7.x86_64.rpm
+rpm -ivh mysql-community-client-5.7.44-1.el7.x86_64.rpm
+rpm -ivh mysql-community-server-5.7.44-1.el7.x86_64.rpm
+```
+
+#### 6.3 启动 & 改密码
+
+```bash
+systemctl start mysqld
+systemctl enable mysqld
+grep 'temporary password' /var/log/mysqld.log
+```
+
+拿到临时密码后登入 MySQL：
+
+```sql
+set global validate_password_policy=0;
+set global validate_password_length=1;
+ALTER USER 'root'@'localhost' IDENTIFIED BY '123456';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+```
+
+---
+
+### 子任务七：Hive 安装配置
+
+#### 7.1 解压
+
+```bash
+tar -zxf /opt/software/apache-hive-3.1.3-bin.tar.gz -C /opt/module/
+cd /opt/module
+mv apache-hive-3.1.3-bin hive-3.1.3
+chown -R hadoop:hadoop hive-3.1.3
+```
+
+#### 7.2 替换 Guava（版本冲突修复）
+
+```bash
+mv /opt/module/hive-3.1.3/lib/guava-*.jar /opt/module/hive-3.1.3/lib/guava-old.jar.bak
+cp /opt/module/hadoop/share/hadoop/common/lib/guava-*.jar /opt/module/hive-3.1.3/lib/
+```
+
+> [!TIP]
+> Hive 自带的 Guava 和 Hadoop 的 Guava 版本不一致会报 `NoSuchMethodError`。直接拿 Hadoop 的替换掉 Hive 的即可。
+
+#### 7.3 环境变量 & hive-env.sh
+
+在 `myenv.sh` 追加：
+
+```bash
+export HIVE_HOME=/opt/module/hive-3.1.3
+export PATH=$PATH:$HIVE_HOME/bin
+```
+
+hive-env.sh：
+
+```bash
+cd /opt/module/hive-3.1.3/conf
+cp hive-env.sh.template hive-env.sh
+vim hive-env.sh
+```
+
+```bash
+export HADOOP_HOME=/opt/module/hadoop
+export HIVE_CONF_DIR=/opt/module/hive-3.1.3/conf
+export HIVE_AUX_JARS_PATH=/opt/module/hive-3.1.3/lib
+```
+
+#### 7.4 hive-site.xml
+
+```xml
+<property>
+  <name>javax.jdo.option.ConnectionURL</name>
+  <value>jdbc:mysql://master:3306/hive?createDatabaseIfNotExist=true</value>
+</property>
+<property>
+  <name>javax.jdo.option.ConnectionDriverName</name>
+  <value>com.mysql.jdbc.Driver</value>
+</property>
+<property>
+  <name>javax.jdo.option.ConnectionUserName</name>
+  <value>root</value>
+</property>
+<property>
+  <name>javax.jdo.option.ConnectionPassword</name>
+  <value>123456</value>
+</property>
+<property>
+  <name>hive.server2.thrift.port</name>
+  <value>10000</value>
+</property>
+<property>
+  <name>hive.server2.thrift.bind.host</name>
+  <value>master</value>
+</property>
+<property>
+  <name>hive.server2.authentication</name>
+  <value>NONE</value>
+</property>
+<property>
+  <name>hive.metastore.uris</name>
+  <value>thrift://master:9083</value>
+</property>
+```
+
+#### 7.5 拷贝 JDBC 驱动
+
+```bash
+cp /opt/software/mysql-connector-java-5.1.32.jar /opt/module/hive-3.1.3/lib/
+```
+
+#### 7.6 初始化元数据库
+
+```bash
+bin/schematool -initSchema -dbType mysql -verbose
+```
+
+初始化完在 MySQL 中验证元数据表：
+
+```sql
+SELECT COUNT(*) FROM information_schema.tables
+WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
+```
+
+> [!NOTE]
+> 初始化前确保 Hadoop 已启动、MySQL 已运行且能远程连接。
+
+#### 7.7 启动 Hive 服务
+
+```bash
+nohup bin/hive --service metastore > /tmp/metastore.log 2>&1 &
+nohup bin/hive --service hiveserver2 > /tmp/hiveserver2.log 2>&1 &
+```
+
+beeline 连接验证：
+
+```bash
+bin/beeline -u jdbc:hive2://master:10000 -n hadoop
+```
 
 ---
 
 ## 模块二：数据获取与清洗
 
-比赛提供一个 CSV 文件 `bike_rides.csv`（共享单车骑行数据），字段包括：
+数据集 `bike_rides.csv`，字段：骑行ID、单车编号、用户ID、开始/结束时间、起始/结束位置、骑行距离(km)、骑行时长(分钟)、天气状况、温度、周末标记。
 
-> 骑行ID、单车编号、用户ID、开始时间、结束时间、起始位置、结束位置、骑行距离(km)、骑行时长(分钟)、天气状况、温度、周末标记
+### 任务一：数据探索（6 项）
 
-### 2.1 第一印象：看看数据长啥样
-
-拿到数据不要急着写清洗逻辑，先用几行代码摸清底细：
-
-**第一步，读取文件并看形状：**
+#### 1.1 行列数 & 数据类型
 
 ```python
 import pandas as pd
 df = pd.read_csv('bike_rides.csv')
 print(f"行数: {df.shape[0]}, 列数: {df.shape[1]}")
-```
-
-> `df.shape` 返回 `(行数, 列数)` 元组。如果行数是 0 说明文件读失败了，检查文件名和路径。
-
-**第二步，看每列的数据类型：**
-
-```python
 print(df.dtypes)
 ```
 
-> 关注两件事：1) 时间列是不是 object 类型（需要转 datetime）；2) 数值列是不是 int/float（如果不是说明里面有脏数据）。
-
-**第三步，看前 10 行样本：**
+#### 1.2 前 10 行
 
 ```python
 print(df.head(10).to_string())
 ```
 
-> `.to_string()` 是保险措施——Pandas 默认会截断列宽，用 `to_string()` 能看到完整内容。在比赛里截图提交时尤其重要，截出来的图列多行少考官看不清就得扣分。
-
-**第四步，检查缺失值：**
+#### 1.3 缺失值统计
 
 ```python
-print(df.isnull().sum())
+missing_count = df.isnull().sum()
+print(missing_count)
+print(f"总缺失值数量: {df.isnull().sum().sum()}")
 ```
 
-> `.isnull().sum()` 统计每列缺了多少个值。哪个列缺失多，后面清洗就重点照顾它。
-
-**第五步，看数值列的基本统计量：**
+#### 1.4 基本统计量（骑行距离 & 骑行时长）
 
 ```python
-print(df[['骑行距离(km)', '骑行时长(分钟)']].describe())
+stats = df[['骑行距离(km)', '骑行时长(分钟)']].describe().loc[['min', 'max', 'mean', '50%']]
+stats = stats.round(2)
+stats.index = ['最小值', '最大值', '平均值', '中位数']
+print(stats)
 ```
 
-> `describe()` 输出 count、mean、std、min、25%、50%、75%、max。快速判断数据范围是否合理。
+#### 1.5 不同单车数量
 
-### 2.2 数据清洗（7 步流水线）
+```python
+print(f"不同单车数量: {df['单车编号'].nunique()}")
+```
 
-每条清洗规则单独执行、单独保存文件。
+---
 
-**C1 — 删除骑行距离缺失或为 0 的记录：**
+### 任务二：7 步数据清洗
+
+每步**都基于前一步的输出结果**，每步保存为 `cleaned_data_cN_{删除数}.csv`。
+
+#### C1：删除骑行距离为空或为 0 的记录
 
 ```python
 o_count = len(df)
@@ -1557,55 +1867,47 @@ deleted = o_count - len(df)
 df.to_csv(f'cleaned_data_c1_{deleted}.csv', index=False, encoding='utf-8-sig')
 ```
 
-> `dropna(subset=[...])` 只检查指定列的空值。`encoding='utf-8-sig'` 是为了 Excel 打开不乱码（BOM 头）。
-
-**C2 — 补全天气状况缺失值：**
+#### C2：天气状况缺失值用众数填充
 
 ```python
-most_common = df['天气状况'].mode()[0]
-modified = df['天气状况'].isnull().sum()
-df['天气状况'] = df['天气状况'].fillna(most_common)
-df.to_csv(f'cleaned_data_c2_{modified}.csv', index=False, encoding='utf-8-sig')
+m_count = df['天气状况'].isnull().sum()
+df['天气状况'] = df['天气状况'].fillna(df['天气状况'].mode()[0])
+df.to_csv(f'cleaned_data_c2_{m_count}.csv', index=False, encoding='utf-8-sig')
 ```
 
-> `.mode()[0]` 取第一个众数。用 `[0]` 是因为可能有多个众数（并列第一）。
-
-**C3 — 删除异常骑行时长：**
+#### C3：删除异常骑行时长（< 1 分钟或 > 1440 分钟）
 
 ```python
 o_count = len(df)
-df = df[(df['骑行时长(分钟)'] >= 1) & (df['骑行时长(分钟)'] <= 1440)]
+df = df[df['骑行时长(分钟)'].notna() & (df['骑行时长(分钟)'] >= 1) & (df['骑行时长(分钟)'] <= 1440)]
 deleted = o_count - len(df)
 df.to_csv(f'cleaned_data_c3_{deleted}.csv', index=False, encoding='utf-8-sig')
 ```
 
-> 少于 1 分钟可能是误触；超过 1440 分钟（24h）大概率是系统 bug。
-
-**C4 — 删除异常骑行距离：**
+#### C4：删除异常骑行距离（<= 0 或 > 50 km）
 
 ```python
 o_count = len(df)
-df = df[(df['骑行距离(km)'] > 0) & (df['骑行距离(km)'] <= 50)]
+df = df[df['骑行距离(km)'].notna() & (df['骑行距离(km)'] > 0) & (df['骑行距离(km)'] <= 50)]
 deleted = o_count - len(df)
 df.to_csv(f'cleaned_data_c4_{deleted}.csv', index=False, encoding='utf-8-sig')
 ```
 
-> 超过 50km 对于共享单车极度不合理。
-
-**C5 — 删除时间逻辑错误：**
+#### C5：删除结束时间早于开始时间的记录
 
 ```python
+o_count = len(df)
 df['开始时间'] = pd.to_datetime(df['开始时间'])
 df['结束时间'] = pd.to_datetime(df['结束时间'])
-o_count = len(df)
-df = df[df['结束时间'] >= df['开始时间']]
+df = df[df['结束时间'] >= df['开始时间']].copy()
 deleted = o_count - len(df)
 df.to_csv(f'cleaned_data_c5_{deleted}.csv', index=False, encoding='utf-8-sig')
 ```
 
-> **先转成 datetime 再比较**。如果直接按字符串比较结果不可靠。
+> [!WARNING]
+> 时间比较前必须先 `pd.to_datetime()`，否则字符串比大小会出错。
 
-**C6 — 去重：**
+#### C6：删除完全重复的行
 
 ```python
 o_count = len(df)
@@ -1614,113 +1916,155 @@ deleted = o_count - len(df)
 df.to_csv(f'cleaned_data_c6_{deleted}.csv', index=False, encoding='utf-8-sig')
 ```
 
-**C7 — 删除同位长时间记录：**
+#### C7：删除起始位置=结束位置且时长 > 5 分钟的异常记录
 
 ```python
-mask = (df['起始位置'] == df['结束位置']) & (df['骑行时长(分钟)'] > 5)
-deleted = mask.sum()
-df = df[~mask]
-df.to_csv(f'cleaned_data_c7_{deleted}.csv', index=False, encoding='utf-8-sig')
+abnormal = df[(df['起始位置'] == df['结束位置']) & (df['骑行时长(分钟)'] > 5)]
+df = df[~((df['起始位置'] == df['结束位置']) & (df['骑行时长(分钟)'] > 5))]
+df.to_csv(f'cleaned_data_c7_{len(abnormal)}.csv', index=False, encoding='utf-8')
 ```
 
-> 起止位置相同且超过 5 分钟，很可能是骑了一圈回来或数据录入错误。
+---
 
-### 2.3 数据标注
+### 数据标注（两列）
 
-**标注一：骑行距离分类**
+#### 距离分类：短途 / 中途 / 长途
 
 ```python
-def classify_distance(d):
-    if d < 2: return '短途'
-    elif d <= 5: return '中途'
-    else: return '长途'
-df['距离分类'] = df['骑行距离(km)'].apply(classify_distance)
+df = pd.read_csv('final_cleaned_data.csv')
+
+def classify(d):
+    if d < 2:      return '短途'
+    elif d <= 5:   return '中途'
+    return '长途'
+
+df['距离分类'] = df['骑行距离(km)'].apply(classify)
+df.to_csv('ride_distance_mark.csv', index=False)
+for cat in ['短途', '中途', '长途']:
+    print(f"{cat}: {df['距离分类'].value_counts().get(cat, 0)} 条")
 ```
 
-> 2-5 公里的"中途"是共享单车的核心场景——太短不如走路，太长不如打车。
-
-**标注二：时段热度标注**
+#### 时段热度：高峰 / 平峰 / 低峰
 
 ```python
 df['开始时间'] = pd.to_datetime(df['开始时间'])
 
-def classify_period(row):
+def classify_time(row):
     h = row['开始时间'].hour
-    if row['周末标记'] == 1: return '低峰时段'
-    if (7 <= h < 9) or (17 <= h < 19): return '高峰时段'
-    elif (9 <= h < 17) or (19 <= h < 22): return '平峰时段'
-    else: return '低峰时段'
+    if row['周末标记'] == 1:
+        return '低峰时段'
+    if (7 <= h < 9) or (17 <= h < 19):
+        return '高峰时段'
+    elif (9 <= h < 17) or (19 <= h < 22):
+        return '平峰时段'
+    return '低峰时段'
 
-df['时段热度'] = df.apply(classify_period, axis=1)
-```
-
-> `axis=1` 按行 apply，函数里能同时取到开始时间和周末标记两列。
-
-### 2.4 HDFS & MapReduce 操作
-
-**创建 HDFS 目录并上传：**
-
-```bash
-hdfs dfs -mkdir -p /bike_data/records /bike_data/statistics
-hdfs dfs -chmod -R 777 /bike_data
-hdfs dfs -put /tmp/bike_rides.csv /bike_data/records/
-```
-
-**WordCount 单词统计：**
-
-```bash
-hdfs dfs -mkdir -p /user/hadoop/input
-hdfs dfs -put /var/log/dmesg /user/hadoop/input/
-hadoop jar hadoop-mapreduce-examples-3.5.0.jar wordcount /user/hadoop/input/dmesg /user/hadoop/output
-```
-
-**查看 Top 10 高频词：**
-
-```bash
-hdfs dfs -cat /user/hadoop/output/part-r-* | sort -k2 -nr | head -10
-```
-
-**指定 2 个 Reducer：**
-
-```bash
-hadoop jar hadoop-mapreduce-examples-3.5.0.jar wordcount -D mapreduce.job.reduces=2 /user/hadoop/input/dmesg /user/hadoop/output2
-```
-
-> `-D mapreduce.job.reduces=2` 设置 Reducer 数量。越多并行度越高，但 shuffle 网络开销也增大。
-
-**计算 Pi 值：**
-
-```bash
-hadoop jar hadoop-mapreduce-examples-3.5.0.jar pi 16 10000
-```
-
-> 参数 16=Map 任务数，10000=每个 Map 的采样点。演示蒙特卡洛算法。
-
-**Grep 正则匹配：**
-
-```bash
-hdfs dfs -mkdir -p /user/hadoop/grep_input
-hdfs dfs -put /var/log/dmesg /user/hadoop/grep_input/
-hadoop jar hadoop-mapreduce-examples-3.5.0.jar grep /user/hadoop/grep_input /user/hadoop/grep_output "system.*"
-```
-
-> `"system.*"` 匹配以 system 开头的词。Hadoop 版 grep 分布式执行，展示"分而治之"思想。
-
-**TeraSort 基准测试：**
-
-```bash
-hadoop jar hadoop-mapreduce-examples-3.5.0.jar teragen 100000 /user/hadoop/terasort-input
-hadoop jar hadoop-mapreduce-examples-3.5.0.jar terasort /user/hadoop/terasort-input /user/hadoop/terasort-output
-hadoop jar hadoop-mapreduce-examples-3.5.0.jar teravalidate /user/hadoop/terasort-output /user/hadoop/teravalidate-output
+df['时段热度'] = df.apply(classify_time, axis=1)
+df.to_csv('time_period_mark.csv', index=False)
 ```
 
 ---
 
 ## 模块三：业务分析与可视化
 
-基于清洗完成的 `final_cleaned_data.csv`，用 Pandas + Matplotlib 完成 5 项统计 + 5 张图表。
+### 任务一：HDFS 文件操作
 
-### 3.1 中文字体配置
+```bash
+hdfs dfs -mkdir -p /bike_data/records /bike_data/statistics
+hdfs dfs -chmod -R 777 /bike_data
+hdfs dfs -put /tmp/bike_rides.csv /bike_data/records
+hdfs dfs -cat /bike_data/records/bike_rides.csv | head -10
+hdfs dfs -get /bike_data/records/*  /tmp/bike_analysis
+```
+
+### 任务二：MapReduce 统计分析
+
+```bash
+hdfs dfs -mkdir -p /user/hadoop/input
+hdfs dfs -put /var/log/dmesg /user/hadoop/input
+hadoop jar /opt/module/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.6.jar wordcount /user/hadoop/input/dmesg /user/hadoop/output
+hdfs dfs -cat /user/hadoop/output/part-r-* | sort -k2 -nr | head -10
+hadoop jar ... wordcount -D mapreduce.job.reduces=2 /user/hadoop/input/dmesg /user/hadoop/output2
+hadoop jar ... pi 16 10000
+hdfs dfs -mkdir -p /user/hadoop/grep_input
+hdfs dfs -put -f /var/log/dmesg /user/hadoop/grep_input/
+hadoop jar ... grep /user/hadoop/grep_input /user/hadoop/grep_output "system.*"
+hdfs dfs -mkdir -p /user/hadoop/wordmean_input
+hdfs dfs -put /var/log/dmesg /user/hadoop/wordmean_input/
+hadoop jar ... wordmean /user/hadoop/wordmean_input /user/hadoop/wordmean_output
+hadoop jar ... teragen 100000 /user/hadoop/terasort-input
+hadoop jar ... terasort /user/hadoop/terasort-input /user/hadoop/terasort-output
+hadoop jar ... teravalidate /user/hadoop/terasort-output /user/hadoop/teravalidate-output
+```
+
+---
+
+### 任务三：5 项数据分析
+
+基于 `final_cleaned_data.csv`。
+
+#### 3.1 每小时平均骑行量 Top 3
+
+```python
+df['开始时间'] = pd.to_datetime(df['开始时间'])
+df['小时'] = df['开始时间'].dt.hour
+df['日期'] = df['开始时间'].dt.date
+
+hourly_total = df.groupby('小时')['骑行ID'].count()
+hourly_days = df.groupby('小时')['日期'].nunique()
+hourly_avg = (hourly_total / hourly_days).round(2)
+
+for hour, avg in hourly_avg.sort_values(ascending=False).head(3).items():
+    print(f"{hour}:00 -> 平均 {avg} 次骑行")
+```
+
+#### 3.2 不同天气下的平均骑行时长 & 距离
+
+```python
+weather_stats = df.groupby('天气状况').agg(
+    平均骑行时长=('骑行时长(分钟)', 'mean'),
+    平均骑行距离=('骑行距离(km)', 'mean')
+).round(2)
+print(weather_stats)
+```
+
+#### 3.3 工作日 vs 周末骑行模式
+
+```python
+comparison = df.groupby('周末标记').agg(
+    骑行次数=('骑行ID', 'count'),
+    平均骑行时长=('骑行时长(分钟)', 'mean'),
+    平均骑行距离=('骑行距离(km)', 'mean')
+).round(2)
+comparison.index = ['工作日', '周末']
+print(comparison)
+```
+
+#### 3.4 最热门上车 / 下车区域 Top 5
+
+```python
+print(df['起始位置'].value_counts().head(5))
+print(df['结束位置'].value_counts().head(5))
+```
+
+#### 3.5 温度区间对骑行量的影响
+
+```python
+df['日期'] = df['开始时间'].dt.date
+temp_bins = [-float('inf'), 0, 10, 20, 30, float('inf')]
+temp_labels = ['0℃以下', '0-10℃', '10-20℃', '20-30℃', '30℃以上']
+df['温度区间'] = pd.cut(df['温度'], bins=temp_bins, labels=temp_labels)
+
+daily = df.groupby(['日期', '温度区间']).size().reset_index(name='每日骑行量')
+avg_daily = daily.groupby('温度区间')['每日骑行量'].mean().round(2)
+print(avg_daily.reindex(temp_labels))
+```
+
+---
+
+### 任务四：5 张 Matplotlib 可视化图表
+
+**中文字体配置（每个文件开头必写）：**
 
 ```python
 import matplotlib
@@ -1728,130 +2072,101 @@ matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei']
 matplotlib.rcParams['axes.unicode_minus'] = False
 ```
 
-### 3.2 五项统计分析
-
-**分析一 — 每小时平均骑行量 Top 3：**
+#### 4.1 柱状图：Top 5 区域骑行量
 
 ```python
-df['小时'] = df['开始时间'].dt.hour
-df['日期'] = df['开始时间'].dt.date
-total = df.groupby('小时')['骑行ID'].count()
-days = df.groupby('小时')['日期'].nunique()
-avg = (total / days).sort_values(ascending=False)
-print(avg.head(3))
-```
+import matplotlib.pyplot as plt
 
-**分析二 — 不同天气下的骑行表现：**
-
-```python
-weather_stats = df.groupby('天气状况').agg(
-    平均骑行时长=('骑行时长(分钟)', 'mean'),
-    平均骑行距离=('骑行距离(km)', 'mean')
-).round(2)
-```
-
-**分析三 — 工作日 vs 周末对比：**
-
-```python
-comparison = df.groupby('周末标记').agg(
-    骑行次数=('骑行ID', 'count'),
-    平均时长=('骑行时长(分钟)', 'mean'),
-    平均距离=('骑行距离(km)', 'mean')
-).round(2)
-```
-
-**分析四 — 最热门区域 Top 5：**
-
-```python
-print('上车Top5:', df['起始位置'].value_counts().head(5))
-print('下车Top5:', df['结束位置'].value_counts().head(5))
-```
-
-**分析五 — 温度对骑行量的影响：**
-
-```python
-bins = [-float('inf'), 0, 10, 20, 30, float('inf')]
-labels = ['0度以下', '0-10度', '10-20度', '20-30度', '30度以上']
-df['温度区间'] = pd.cut(df['温度'], bins=bins, labels=labels)
-daily = df.groupby(['日期', '温度区间']).size().reset_index(name='日骑行量')
-result = daily.groupby('温度区间')['日骑行量'].mean().round(2)
-```
-
-### 3.3 五张可视化图表
-
-**图表一 — 柱状图：骑行量 Top 5 区域**
-
-```python
 top5 = df['起始位置'].value_counts().head(5)
 fig, ax = plt.subplots(figsize=(12, 6))
-bars = ax.bar(range(len(top5)), top5.values, color=['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7'])
+bars = ax.bar(range(len(top5)), top5.values, color=['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7'], edgecolor='black', linewidth=1.2)
 ax.set_xticks(range(len(top5)))
-ax.set_xticklabels(top5.index, rotation=15)
+ax.set_xticklabels(top5.index, rotation=15, ha='right')
 ax.set_title('主要区域骑行量统计', fontsize=16, fontweight='bold')
-for bar, v in zip(bars, top5.values):
-    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1, str(v), ha='center', fontweight='bold')
+ax.set_ylabel('骑行量')
+for bar, count in zip(bars, top5.values):
+    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, str(count), ha='center', fontweight='bold')
+plt.tight_layout(); plt.show()
 ```
 
-**图表二 — 折线图：连续 7 天骑行量趋势**
+#### 4.2 折线图：连续 7 天每日骑行量
 
 ```python
-daily_stats = df.groupby(['日期', '周末标记'])['骑行距离(km)'].sum().reset_index()
-dates = sorted(daily_stats['日期'].unique())[:7]
-# 蓝线工作日 marker='o'，红线周末 marker='s'
+df['日期'] = df['开始时间'].dt.date
+dates = sorted(df['日期'].unique())[:7]
+workday, weekend, labels = [], [], []
+for d in dates:
+    workday.append(df[(df['日期']==d)&(df['周末标记']==0)]['骑行距离(km)'].sum())
+    weekend.append(df[(df['日期']==d)&(df['周末标记']==1)]['骑行距离(km)'].sum())
+    labels.append(d.strftime('%m/%d'))
+
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.plot(range(7), workday, 'b-o', label='工作日', linewidth=2, markersize=8)
+ax.plot(range(7), weekend, 'r-s', label='周末', linewidth=2, markersize=8)
+ax.set_xticks(range(7)); ax.set_xticklabels(labels)
+ax.set_title('连续7天每日骑行总量变化', fontsize=16, fontweight='bold')
+ax.legend(); ax.grid(True, alpha=0.3)
+plt.tight_layout(); plt.show()
 ```
 
-**图表三 — 水平条形图：四时段平均骑行时长**
+#### 4.3 水平条形图：四时段平均骑行时长
 
 ```python
-df['时间段'] = df['小时'].apply(lambda h: '早高峰' if 7<=h<9 else '日间' if 9<=h<17 else '晚高峰' if 17<=h<19 else '夜间')
-period_avg = df.groupby('时间段')['骑行时长(分钟)'].mean().sort_values()
-ax.barh(range(len(period_avg)), period_avg.values, color=['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4'])
+def period(h):
+    if 7<=h<9: return '早高峰'
+    elif 9<=h<17: return '日间'
+    elif 17<=h<19: return '晚高峰'
+    return '夜间'
+df['时段'] = df['开始时间'].dt.hour.apply(period)
+period_avg = df.groupby('时段')['骑行时长(分钟)'].mean().sort_values()
+
+fig, ax = plt.subplots(figsize=(10, 6))
+bars = ax.barh(range(len(period_avg)), period_avg.values, color=['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4'], height=0.6)
+ax.set_yticks(range(len(period_avg))); ax.set_yticklabels(period_avg.index)
+for bar, v in zip(bars, period_avg.values):
+    ax.text(bar.get_width()+0.5, bar.get_y()+bar.get_height()/2, f'{v:.1f}分钟', va='center')
+plt.tight_layout(); plt.show()
 ```
 
-**图表四 — 散点图：距离 vs 时长**
+#### 4.4 散点图：骑行距离 vs 骑行时长
 
 ```python
-ax.scatter(df['骑行距离(km)'], df['骑行时长(分钟)'], color='blue', alpha=0.3, s=10, edgecolors='white', linewidth=0.3)
+fig, ax = plt.subplots(figsize=(12, 8))
+ax.scatter(df['骑行距离(km)'], df['骑行时长(分钟)'], color='blue', alpha=0.6, s=10, edgecolors='white', linewidth=0.5)
+ax.set_title('骑行距离与时长关系', fontsize=16, fontweight='bold')
+ax.set_xlabel('骑行距离 (km)'); ax.set_ylabel('骑行时长 (分钟)')
+ax.grid(True, alpha=0.3)
+plt.tight_layout(); plt.show()
 ```
 
-> `alpha=0.3` 低透明度看密度分布，`s=10` 控制点大小。
-
-**图表五 — 饼图：天气状况骑行量比例**
+#### 4.5 饼图：天气状况比例
 
 ```python
-weather_counts = df['天气状况'].value_counts()
-ax.pie(weather_counts.values, labels=weather_counts.index, autopct='%1.1f%%', startangle=90)
+weather = df['天气状况'].value_counts()
+fig, ax = plt.subplots(figsize=(12, 8))
+wedges, texts, autotexts = ax.pie(weather.values, labels=weather.index, autopct='%1.1f%%', startangle=90)
+for at in autotexts: at.set_color('white'); at.set_fontweight('bold')
+ax.set_title('不同天气状况下的骑行量比例', fontsize=16, fontweight='bold')
+ax.axis('equal')
+plt.tight_layout(); plt.show()
 ```
-
-> `autopct='%1.1f%%'` 标注百分比保留 1 位小数。`startangle=90` 从 12 点钟方向开始。
 
 ---
 
-## 踩坑备忘（血泪总结）
+## 踩坑备忘
 
-**环境类：**
+| 分类 | 坑点 |
+|---|---|
+| **环境** | `hostnamectl` 完要 `bash` 刷提示符；环境变量放 `/etc/profile.d/myenv.sh` 不要直接改 `/etc/profile`；路径用 `pwd` 复制不要手写 |
+| **环境** | `PATH=$PATH:...` 前面的 `$PATH` 忘写会导致 `ls`/`vim` 全丢；急救 `export PATH=/usr/bin:/usr/sbin` |
+| **环境** | SSH 免密 root 和 hadoop 两个用户都要做三台；`scp $PWD` 注意当前目录 |
+| **Hadoop** | `hadoop-env.sh` 必须加 `export ..._USER=hadoop` 那五行；5 个 xml 别忘了 yarn 的内存检查关闭和日志聚合 |
+| **SELinux** | `setenforce 0`（临时 Permissive）≠ 改 `config` 文件（永久 Disabled） |
+| **Python** | 每清洗步备份原始行数再算删除量；时间列用 `pd.to_datetime()` 转换后再比较 |
+| **Python** | `encoding='utf-8-sig'` 解决 CSV 中文乱码；Matplotlib 中文字体配置必须放文件最前面 |
+| **截图** | 只截关键内容；`tar -zxf` 不要 `-v`；`jps` 截完确认所有进程都在 |
 
-1. **JDK 路径用 `pwd` 复制，不要手写。** 手写少一个数字就找不到
-2. **环境变量放单独文件** `/etc/profile.d/myenv.sh`，不要直接改 `/etc/profile`
-3. **`$PATH:` 放前面，不是后面。** `PATH=$JAVA_HOME/bin` = 覆盖 = 全崩
-4. **配错急救：`export PATH=/usr/bin:/usr/sbin`**，能恢复基础命令
-5. **SSH 免密不要漏：root + hadoop 两个用户都要在三台机器之间互相免密**
-6. **解压别加 -v，截图没法看**
-
-**Hadoop 类：**
-
-7. **格式化 NameNode 只能做一次。** 第二次格式化清空所有 HDFS 数据
-8. **`yarn-site.xml` 的 `mapreduce_shuffle` 必须写。** 漏了它所有 MR 任务失败
-9. **master 也要写进 `workers` 文件。** master 同时也是 DataNode
-10. **`jps` 验证进程是关键步骤。** 缺哪个进程回去逐项查配置
-
-**Python 类：**
-
-11. **数据清洗记得先备份原始行数，再算删除量**
-12. **时间列比较前必须先 `pd.to_datetime()`**
-13. **Matplotlib 中文字体：头两行必须写 `font.sans-serif` 配置**
-14. **截图只截关键区域**，整屏截考官看不清细节
-*/})
+  */})
 ,
   /* ---- 3: Python 入门 ---- */
   raw(function(){/*
@@ -3366,7 +3681,7 @@ function calculateAverage(user) {
 function renderMarkdown(md) {
   var lines = md.split('\n');
   var html = '';
-  var inCodeBlock = false, codeContent = '';
+  var inCodeBlock = false, codeContent = '', codeLang = '';
   var inTable = false, tableHtml = '';
 
   function parseInline(text) {
@@ -3385,11 +3700,14 @@ function renderMarkdown(md) {
 
     if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
-        html += '<pre><code>' + codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>';
+        var langAttr = codeLang ? ' class="language-' + codeLang + '"' : '';
+        html += '<pre><code' + langAttr + '>' + codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>';
         codeContent = '';
+        codeLang = '';
         inCodeBlock = false;
       } else {
         inCodeBlock = true;
+        codeLang = line.trim().slice(3).trim().split(' ')[0];
       }
       continue;
     }
@@ -3503,6 +3821,9 @@ var categories = [
 
   function showArticle(idx) {
     content.innerHTML = renderMarkdown(articles[idx]);
+    if (typeof hljs !== 'undefined') {
+      content.querySelectorAll('pre code').forEach(function(el) { hljs.highlightElement(el); });
+    }
     content.style.animation = 'none';
     content.offsetHeight;
     content.style.animation = 'fadeUp .4s ease both';

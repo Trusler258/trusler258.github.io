@@ -410,6 +410,7 @@ footer b { color: var(--text); }
   display: block; padding: 16px;
   background: none; color: #a0a0c0; overflow-x: auto;
 }
+.blog-article pre code.hljs { background: transparent; }
 
 .timeline {
   position: relative; padding-left: 28px; margin: 16px 0;
