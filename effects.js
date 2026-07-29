@@ -236,4 +236,10 @@
     ].join('');
     container.appendChild(dp);
   }
+
+  // 隐形水印
+  var wm = document.createElement('div');
+  wm.style.cssText = 'position:fixed;bottom:8px;right:12px;font-family:"JetBrains Mono",monospace;font-size:10px;color:rgba(255,255,255,0.03);pointer-events:none;z-index:0;user-select:none;';
+  wm.textContent = 'Trusler';
+  document.body.appendChild(wm);
 })();
