@@ -111,8 +111,12 @@
   setTimeout(function() {
     cards.forEach(function(c) { c.style.animation = 'none'; });
   }, 1500);
-  document.addEventListener('mousemove', function(e) {
-    cards.forEach(function(c) {
+
+  cards.forEach(function(c) {
+    var max = c.classList.contains('profile-card') ? 12 : 8;
+    var z = c.classList.contains('profile-card') ? '40px' : '20px';
+
+    c.addEventListener('mousemove', function(e) {
       var rect = c.getBoundingClientRect();
       var cx = rect.left + rect.width / 2;
       var cy = rect.top + rect.height / 2;
@@ -120,18 +124,13 @@
       var dy = (e.clientY - cy) / (rect.height / 2);
       dx = Math.max(-1, Math.min(1, dx));
       dy = Math.max(-1, Math.min(1, dy));
-      var max = c.classList.contains('profile-card') ? 12 : 8;
       var rx = -dy * max;
       var ry = dx * max;
-      var z = c.classList.contains('profile-card') ? '40px' : '20px';
       c.style.transition = 'none';
       c.style.transform = 'translateZ(' + z + ') rotateX(' + rx.toFixed(1) + 'deg) rotateY(' + ry.toFixed(1) + 'deg)';
     });
-  });
 
-  document.addEventListener('mouseleave', function() {
-    cards.forEach(function(c) {
-      var z = c.classList.contains('profile-card') ? '40px' : '20px';
+    c.addEventListener('mouseleave', function() {
       c.style.transition = 'transform .5s ease-out';
       c.style.transform = 'translateZ(' + z + ') rotateX(0deg) rotateY(0deg)';
     });
