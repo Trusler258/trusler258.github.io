@@ -196,12 +196,11 @@ var categories = [];
     navCats.innerHTML = '';
     categories.forEach(function(cat, i) {
       var b = document.createElement('button');
-      b.className = 'blog-cat-btn';
-      if (i === 0) b.classList.add('active');
+      b.className = 'blog-cat' + (i === 0 ? ' active' : '');
       b.textContent = cat.name;
       b.addEventListener('click', function() {
         activeCat = i;
-        navCats.querySelectorAll('.blog-cat-btn').forEach(function(btn) { btn.classList.remove('active'); });
+        navCats.querySelectorAll('.blog-cat').forEach(function(btn) { btn.classList.remove('active'); });
         b.classList.add('active');
         renderList();
       });

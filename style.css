@@ -393,7 +393,7 @@ footer b { color: var(--text); }
 }
 .blog-article pre {
   position: relative; background: #0a0a18; border: 1px solid var(--border);
-  border-radius: 10px; margin: 16px 0; overflow: hidden;
+  border-radius: 10px; margin: 16px 0;
   font-family: var(--fm); font-size: 12px; line-height: 1.7;
 }
 .blog-article pre::before {
@@ -429,9 +429,9 @@ pre:hover .copy-btn { opacity: 1; }
 
 pre[data-lang]::after {
   content: attr(data-lang);
-  position: absolute; top: 6px; left: 10px; z-index: 2;
-  font-family: var(--fm); font-size: 10px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .5px; opacity: .35;
+  position: absolute; top: 7px; left: 10px; z-index: 2;
+  font-family: var(--fm); font-size: 10px; color: var(--soft);
+  text-transform: uppercase; letter-spacing: .5px; opacity: .6;
   pointer-events: none;
 }
 

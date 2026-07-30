@@ -62,7 +62,7 @@
 }
 #preview pre {
   position: relative; background: #0a0a18; border: 1px solid var(--border);
-  border-radius: 8px; margin: 12px 0; overflow: hidden;
+  border-radius: 8px; margin: 12px 0;
   font-family: var(--fm); font-size: 12px; line-height: 1.7;
 }
 #preview pre::before {
@@ -93,9 +93,9 @@
 #preview .copy-btn.copied { color: #3ddc84; border-color: rgba(61,220,132,.4); }
 #preview pre[data-lang]::after {
   content: attr(data-lang);
-  position: absolute; top: 6px; left: 10px; z-index: 2;
-  font-family: var(--fm); font-size: 10px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .5px; opacity: .35;
+  position: absolute; top: 7px; left: 10px; z-index: 2;
+  font-family: var(--fm); font-size: 10px; color: var(--soft);
+  text-transform: uppercase; letter-spacing: .5px; opacity: .6;
   pointer-events: none;
 }
 #preview blockquote {
