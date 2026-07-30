@@ -184,13 +184,13 @@ var categories = [];
   var content = document.getElementById('articleContent');
   var activeId = null;
 
-  function renderArticle(md) {
+  function renderArticle(md, articleId) {
     content.innerHTML = renderMarkdown(md);
     if (typeof hljs !== 'undefined') {
       content.querySelectorAll('pre code').forEach(function(el) { hljs.highlightElement(el); });
     }
     addCopyButtons(content);
-    buildTOC(content, id);
+    buildTOC(content, articleId);
     content.style.animation = 'none';
     content.offsetHeight;
     content.style.animation = 'fadeUp .4s ease both';
@@ -206,7 +206,7 @@ var categories = [];
     if (window.history && history.pushState) history.pushState(null, '', '?id=' + id);
     var file = fileMap[id];
     if (!file) { content.innerHTML = '<p style="color:var(--muted)">文章未找到</p>'; return; }
-    if (articleCache[file]) { renderArticle(articleCache[file]); }
+    if (articleCache[file]) { renderArticle(articleCache[file], id); }
     else {
       content.innerHTML = '<p style="text-align:center;color:var(--muted);padding:60px 0;">加载中...</p>';
       function loadArticle(retry) {
@@ -220,7 +220,7 @@ var categories = [];
               var base = file.indexOf('/') !== -1 ? file.substring(0, file.lastIndexOf('/') + 1) : '';
               return pre + base + url + post;
             });
-            articleCache[file] = md; renderArticle(md);
+            articleCache[file] = md; renderArticle(md, id);
           })
           .catch(function(err) {
             if (retry < 2) { setTimeout(function() { loadArticle(retry + 1); }, 800); }
