@@ -103,9 +103,9 @@
 })();
 
 (function() {
-  var main = document.querySelector('main');
-  if (!main) return;
-  var cards = main.querySelectorAll('.profile-card, .card');
+  var mainEl = document.querySelector('main');
+  if (!mainEl) return;
+  var cards = mainEl.querySelectorAll('.profile-card, .card');
   if (!cards.length) return;
 
   setTimeout(function() {
@@ -113,26 +113,41 @@
   }, 1500);
 
   cards.forEach(function(c) {
-    var max = c.classList.contains('profile-card') ? 18 : 12;
-    var z = c.classList.contains('profile-card') ? '60px' : '35px';
+    var maxTilt = c.classList.contains('profile-card') ? 18 : 12;
+    var baseZ = c.classList.contains('profile-card') ? 60 : 35;
+    var trx = 0, try_ = 0, crx = 0, cry = 0;
+    var raf = null, active = false;
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function frame() {
+      crx = lerp(crx, trx, 0.12);
+      cry = lerp(cry, try_, 0.12);
+      c.style.transform = 'translateZ(' + baseZ + 'px) rotateX(' + crx.toFixed(2) + 'deg) rotateY(' + cry.toFixed(2) + 'deg)';
+      var diff = Math.abs(crx - trx) + Math.abs(cry - try_);
+      if (active || diff > 0.005) { raf = requestAnimationFrame(frame); }
+      else { raf = null; }
+    }
+
+    c.addEventListener('mouseenter', function() {
+      active = true;
+      if (!raf) raf = requestAnimationFrame(frame);
+    });
 
     c.addEventListener('mousemove', function(e) {
       var rect = c.getBoundingClientRect();
-      var cx = rect.left + rect.width / 2;
-      var cy = rect.top + rect.height / 2;
-      var dx = (e.clientX - cx) / (rect.width / 2);
-      var dy = (e.clientY - cy) / (rect.height / 2);
+      var dx = (e.clientX - rect.left) / rect.width * 2 - 1;
+      var dy = (e.clientY - rect.top) / rect.height * 2 - 1;
       dx = Math.max(-1, Math.min(1, dx));
       dy = Math.max(-1, Math.min(1, dy));
-      var fx = 1 - dx * dx;
-      var fy = 1 - dy * dy;
-      var rx = -dy * max * fx;
-      var ry = dx * max * fy;
-      c.style.transform = 'translateZ(' + z + ') rotateX(' + rx.toFixed(1) + 'deg) rotateY(' + ry.toFixed(1) + 'deg)';
+      trx = -dy * maxTilt;
+      try_ = dx * maxTilt;
     });
 
     c.addEventListener('mouseleave', function() {
-      c.style.transform = 'translateZ(' + z + ') rotateX(0deg) rotateY(0deg)';
+      active = false;
+      trx = 0; try_ = 0;
+      if (!raf) raf = requestAnimationFrame(frame);
     });
   });
 })();
