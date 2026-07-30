@@ -99,7 +99,6 @@ main {
 .sidebar { width: 320px; flex: none; position: sticky; top: 40px; animation: fadeUp .6s ease both; transform-style: preserve-3d; }
 .profile-card {
   --card-z: 40px;
-  transform: translateZ(var(--card-z));
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 30px;
   text-align: center; position: relative;
@@ -170,7 +169,6 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
 
 .card {
   --card-z: 20px;
-  transform: translateZ(var(--card-z));
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 24px;
   position: relative;

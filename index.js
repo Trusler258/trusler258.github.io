@@ -118,6 +118,7 @@
     var trx = 0, try_ = 0, crx = 0, cry = 0;
     var raf = null, active = false;
 
+    c.style.transform = 'translateZ(' + baseZ + 'px)';
     function lerp(a, b, t) { return a + (b - a) * t; }
 
     function frame() {
