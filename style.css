@@ -294,6 +294,7 @@ footer b { color: var(--text); }
 }
 .blog-nav {
   width: 240px; flex: none; position: sticky; top: 40px;
+  max-height: calc(100vh - 60px); overflow-y: auto;
 }
 .blog-nav .card { padding: 16px; }
 .blog-nav-title {
@@ -326,9 +327,12 @@ footer b { color: var(--text); }
 .blog-back:hover { color: var(--highlight); }
 .blog-back svg { flex: none; }
 
-.blog-toc { width: 200px; flex: none; position: sticky; top: 40px; }
+.blog-toc { width: 200px; flex: none; position: sticky; top: 40px; max-height: calc(100vh - 60px); overflow-y: auto; }
 .blog-toc .card { padding: 16px; }
 .blog-toc .blog-nav-title { font-size: 11px; margin-bottom: 10px; padding-bottom: 8px; }
+
+.blog-nav::-webkit-scrollbar, .blog-toc::-webkit-scrollbar { width: 4px; }
+.blog-nav::-webkit-scrollbar-thumb, .blog-toc::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 .blog-cats { display: none; }
 
