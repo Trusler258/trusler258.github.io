@@ -108,6 +108,9 @@
   var cards = main.querySelectorAll('.profile-card, .card');
   if (!cards.length) return;
 
+  setTimeout(function() {
+    cards.forEach(function(c) { c.style.animation = 'none'; });
+  }, 1500);
   document.addEventListener('mousemove', function(e) {
     cards.forEach(function(c) {
       var rect = c.getBoundingClientRect();
