@@ -214,8 +214,9 @@ var categories = [];
             });
             articleCache[file] = md; renderArticle(md);
           })
-          .catch(function() {
-            if (retry < 2) { content.innerHTML = '<p style="text-align:center;color:var(--muted);padding:60px 0;">重试中...</p>'; setTimeout(function() { loadArticle(retry + 1); }, 1000); }
+          .catch(function(err) {
+            console.error('Fetch error for ' + file + ':', err);
+            if (retry < 2) { content.innerHTML = '<p style="text-align:center;color:var(--muted);padding:60px 0;">重试中...</p>'; setTimeout(function() { loadArticle(retry + 1); }, 800); }
             else { content.innerHTML = '<p style="color:var(--muted)">加载失败，请刷新重试</p>'; }
           });
       }
