@@ -102,7 +102,7 @@ main {
   transform: translateZ(var(--card-z));
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 30px;
-  text-align: center; position: relative; overflow: hidden;
+  text-align: center; position: relative;
   transform-style: preserve-3d;
   transition: transform .5s ease-out, box-shadow .5s ease-out;
 }
@@ -173,7 +173,7 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
   transform: translateZ(var(--card-z));
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 24px;
-  position: relative; overflow: hidden;
+  position: relative;
   transition: border-color .3s, box-shadow .3s, transform .5s ease-out;
   transform-style: preserve-3d;
 }
