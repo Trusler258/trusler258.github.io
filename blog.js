@@ -196,7 +196,12 @@ var categories = [];
       content.innerHTML = '<p style="text-align:center;color:var(--muted);padding:60px 0;">加载中...</p>';
       fetch('posts/' + file)
         .then(function(r) { if (!r.ok) throw Error(r.status); return r.text(); })
-        .then(function(md) { articleCache[file] = md; renderArticle(md); })
+        .then(function(md) {
+          md = md.replace(/([!]\[[^\]]*\]\()([^)\s]+)(\))/g, function(m, pre, url, post) {
+            if (url.indexOf('://') !== -1 || url[0] === '/' || url[0] === '#') return m;
+            return pre + 'posts/' + url + post;
+          });
+          articleCache[file] = md; renderArticle(md); })
         .catch(function() { content.innerHTML = '<p style="color:var(--muted)">加载失败，请刷新重试</p>'; });
     }
     activeId = id;
