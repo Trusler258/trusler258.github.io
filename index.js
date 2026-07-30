@@ -126,7 +126,7 @@
       dy = Math.max(-1, Math.min(1, dy));
       var rx = -dy * max;
       var ry = dx * max;
-      c.style.transition = 'none';
+      c.style.transition = 'transform .08s linear';
       c.style.transform = 'translateZ(' + z + ') rotateX(' + rx.toFixed(1) + 'deg) rotateY(' + ry.toFixed(1) + 'deg)';
     });
 
