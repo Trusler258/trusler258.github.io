@@ -22,6 +22,16 @@
           "id": 1,
           "title": "Linux 命令速查手册",
           "file": "01-linux.md"
+        },
+        {
+          "id": 9,
+          "title": "电脑小白入门生存指南：从解压文件到正确提问的完整手册",
+          "file": "09-pc-noob-class.md"
+        },
+        {
+          "id": 10,
+          "title": "别像弱智一样提问",
+          "file": "10-Stop-Ask-Questions-The-Stupid-Ways.md"
         }
       ]
     },
