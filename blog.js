@@ -145,7 +145,7 @@ function addCopyButtons(container) {
   });
 }
 
-function buildTOC(container) {
+function buildTOC(container, articleId) {
   var toc = document.getElementById('tocList');
   var wrap = document.getElementById('blogTocWrap');
   if (!toc || !wrap) return;
@@ -160,6 +160,7 @@ function buildTOC(container) {
     a.textContent = h.textContent;
     a.addEventListener('click', function(e) {
       e.preventDefault();
+      history.pushState(null, '', '?id=' + articleId + '#' + h.id);
       h.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     toc.appendChild(a);
@@ -181,10 +182,15 @@ var categories = [];
       content.querySelectorAll('pre code').forEach(function(el) { hljs.highlightElement(el); });
     }
     addCopyButtons(content);
-    buildTOC(content);
+    buildTOC(content, id);
     content.style.animation = 'none';
     content.offsetHeight;
     content.style.animation = 'fadeUp .4s ease both';
+    var hash = location.hash;
+    if (hash) {
+      var el = document.getElementById(hash.slice(1));
+      if (el) setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+    }
   }
 
   function showArticle(id) {
