@@ -147,11 +147,11 @@ function addCopyButtons(container) {
 
 function buildTOC(container) {
   var toc = document.getElementById('tocList');
-  var navToc = document.getElementById('navToc');
-  if (!toc || !navToc) return;
+  var wrap = document.getElementById('blogTocWrap');
+  if (!toc || !wrap) return;
   var headings = container.querySelectorAll('h1, h2, h3');
-  if (headings.length === 0) { navToc.style.display = 'none'; return; }
-  navToc.style.display = '';
+  if (headings.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
   toc.innerHTML = '';
   headings.forEach(function(h) {
     var a = document.createElement('a');
