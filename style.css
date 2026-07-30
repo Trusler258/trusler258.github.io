@@ -93,17 +93,18 @@ main {
   width: 95%; gap: 24px;
   align-items: flex-start;
   position: relative; z-index: 1;
-  transform-style: preserve-3d; will-change: transform;
-  transition: transform .6s ease-out;
+  transform-style: preserve-3d;
 }
 
 .sidebar { width: 320px; flex: none; position: sticky; top: 40px; animation: fadeUp .6s ease both; }
 .profile-card {
+  --card-z: 40px;
+  transform: translateZ(var(--card-z));
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 30px;
   text-align: center; position: relative; overflow: hidden;
-  transform-style: preserve-3d; will-change: transform;
-  transition: transform .35s ease-out;
+  transform-style: preserve-3d;
+  transition: transform .5s ease-out, box-shadow .5s ease-out;
 }
 .profile-card::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
@@ -168,10 +169,13 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
 .content-area > .card:nth-child(3) { animation-delay: .3s; }
 
 .card {
+  --card-z: 20px;
+  transform: translateZ(var(--card-z));
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 24px;
   position: relative; overflow: hidden;
-  transition: border-color .3s, box-shadow .3s;
+  transition: border-color .3s, box-shadow .3s, transform .5s ease-out;
+  transform-style: preserve-3d;
 }
 .card:hover {
   border-color: #2c2c55;
