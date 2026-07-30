@@ -102,6 +102,34 @@
   typeQuote(function() { setTimeout(nextQuote, 5000); });
 })();
 
+(function() {
+  var card = document.querySelector('.profile-card');
+  var sidebar = document.querySelector('.sidebar');
+  if (!card || !sidebar) return;
+
+  sidebar.addEventListener('mousemove', function(e) {
+    var rect = card.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var dx = (e.clientX - cx) / rect.width;
+    var dy = (e.clientY - cy) / rect.height;
+    var maxTilt = 8;
+    var rx = Math.max(-1, Math.min(1, -dy)) * maxTilt;
+    var ry = Math.max(-1, Math.min(1, dx)) * maxTilt;
+    card.style.transition = 'none';
+    card.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+    var sx = -dx * 12;
+    var sy = -dy * 8 + 8;
+    card.style.boxShadow = sx + 'px ' + sy + 'px 30px rgba(103,232,249,.12)';
+  });
+
+  sidebar.addEventListener('mouseleave', function() {
+    card.style.transition = 'transform .35s ease-out, box-shadow .35s ease-out';
+    card.style.transform = 'rotateX(0) rotateY(0)';
+    card.style.boxShadow = '';
+  });
+})();
+
 var _tr_usler_build = '0x1';
 
 setInterval(function() {

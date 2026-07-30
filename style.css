@@ -95,11 +95,13 @@ main {
   position: relative; z-index: 1;
 }
 
-.sidebar { width: 320px; flex: none; position: sticky; top: 40px; animation: fadeUp .6s ease both; }
+.sidebar { width: 320px; flex: none; position: sticky; top: 40px; animation: fadeUp .6s ease both; perspective: 800px; }
 .profile-card {
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 30px;
   text-align: center; position: relative; overflow: hidden;
+  transform-style: preserve-3d; will-change: transform;
+  transition: transform .35s ease-out;
 }
 .profile-card::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
