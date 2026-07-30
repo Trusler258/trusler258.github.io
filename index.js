@@ -103,30 +103,27 @@
 })();
 
 (function() {
-  var card = document.querySelector('.profile-card');
-  var sidebar = document.querySelector('.sidebar');
-  if (!card || !sidebar) return;
+  var main = document.querySelector('main');
+  if (!main) return;
+  var active = false;
 
-  sidebar.addEventListener('mousemove', function(e) {
-    var rect = card.getBoundingClientRect();
-    var cx = rect.left + rect.width / 2;
-    var cy = rect.top + rect.height / 2;
-    var dx = (e.clientX - cx) / rect.width;
-    var dy = (e.clientY - cy) / rect.height;
-    var maxTilt = 8;
-    var rx = Math.max(-1, Math.min(1, -dy)) * maxTilt;
-    var ry = Math.max(-1, Math.min(1, dx)) * maxTilt;
-    card.style.transition = 'none';
-    card.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
-    var sx = -dx * 12;
-    var sy = -dy * 8 + 8;
-    card.style.boxShadow = sx + 'px ' + sy + 'px 30px rgba(103,232,249,.12)';
+  document.addEventListener('mousemove', function(e) {
+    active = true;
+    var hw = window.innerWidth / 2;
+    var hh = window.innerHeight / 2;
+    var dx = (e.clientX - hw) / hw;
+    var dy = (e.clientY - hh) / hh;
+    var maxAngle = 3.5;
+    var rx = Math.max(-1, Math.min(1, -dy)) * maxAngle;
+    var ry = Math.max(-1, Math.min(1, dx)) * maxAngle;
+    main.style.transition = 'none';
+    main.style.transform = 'rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
   });
 
-  sidebar.addEventListener('mouseleave', function() {
-    card.style.transition = 'transform .35s ease-out, box-shadow .35s ease-out';
-    card.style.transform = 'rotateX(0) rotateY(0)';
-    card.style.boxShadow = '';
+  document.addEventListener('mouseleave', function() {
+    active = false;
+    main.style.transition = 'transform .6s ease-out';
+    main.style.transform = 'rotateX(0) rotateY(0)';
   });
 })();
 
