@@ -427,6 +427,14 @@ pre:hover .copy-btn { opacity: 1; }
   background: rgba(103,232,249,.08); }
 .copy-btn.copied { color: #3ddc84; border-color: rgba(61,220,132,.4); }
 
+pre[data-lang]::after {
+  content: attr(data-lang);
+  position: absolute; top: 6px; left: 10px; z-index: 2;
+  font-family: var(--fm); font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px; opacity: .35;
+  pointer-events: none;
+}
+
 .timeline {
   position: relative; padding-left: 28px; margin: 16px 0;
 }

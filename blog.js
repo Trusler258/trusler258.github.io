@@ -21,7 +21,7 @@ function renderMarkdown(md) {
     if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
         var langAttr = codeLang ? ' class="language-' + codeLang + '"' : '';
-        html += '<pre><code' + langAttr + '>' + codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>';
+        html += '<pre' + (codeLang ? ' data-lang="' + codeLang + '"' : '') + '><code' + langAttr + '>' + codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>';
         codeContent = '';
         codeLang = '';
         inCodeBlock = false;

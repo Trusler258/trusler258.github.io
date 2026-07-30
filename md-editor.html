@@ -91,6 +91,13 @@
 #preview .copy-btn:hover { color: var(--text); border-color: rgba(103,232,249,.4);
   background: rgba(103,232,249,.08); }
 #preview .copy-btn.copied { color: #3ddc84; border-color: rgba(61,220,132,.4); }
+#preview pre[data-lang]::after {
+  content: attr(data-lang);
+  position: absolute; top: 6px; left: 10px; z-index: 2;
+  font-family: var(--fm); font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px; opacity: .35;
+  pointer-events: none;
+}
 #preview blockquote {
   border-left: 2px solid var(--highlight); padding: 6px 16px;
   margin: 10px 0; color: var(--muted); font-style: italic;
@@ -168,7 +175,7 @@ function renderMarkdown(md) {
     if (line.trim().startsWith('```')) {
       if (inCodeBlock) {
         var langAttr = codeLang ? ' class="language-' + codeLang + '"' : '';
-        html += '<pre><code' + langAttr + '>' + codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>';
+        html += '<pre' + (codeLang ? ' data-lang="' + codeLang + '"' : '') + '><code' + langAttr + '>' + codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>';
         codeContent = ''; codeLang = ''; inCodeBlock = false;
       } else { inCodeBlock = true; codeLang = line.trim().slice(3).trim().split(' ')[0]; }
       continue;
