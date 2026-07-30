@@ -201,17 +201,25 @@ var categories = [];
     if (articleCache[file]) { renderArticle(articleCache[file]); }
     else {
       content.innerHTML = '<p style="text-align:center;color:var(--muted);padding:60px 0;">加载中...</p>';
-      fetch('posts/' + file)
-        .then(function(r) { if (!r.ok) throw Error(r.status); return r.text(); })
-        .then(function(md) {
-          md = md.replace(/([!]\[[^\]]*\]\()([^)\s]+)(\))/g, function(m, pre, url, post) {
-            if (url.indexOf('://') !== -1 || url.indexOf('//') === 0 || url[0] === '#') return m;
-            if (url[0] === '/') return pre + url.replace(/^\/images\//, '/posts/images/') + post;
-            var base = file.indexOf('/') !== -1 ? file.substring(0, file.lastIndexOf('/') + 1) : '';
-            return pre + base + url + post;
+      function loadArticle(retry) {
+        retry = retry || 0;
+        fetch('posts/' + file)
+          .then(function(r) { if (!r.ok) throw Error(r.status); return r.text(); })
+          .then(function(md) {
+            md = md.replace(/([!]\[[^\]]*\]\()([^)\s]+)(\))/g, function(m, pre, url, post) {
+              if (url.indexOf('://') !== -1 || url.indexOf('//') === 0 || url[0] === '#') return m;
+              if (url[0] === '/') return pre + url.replace(/^\/images\//, '/posts/images/') + post;
+              var base = file.indexOf('/') !== -1 ? file.substring(0, file.lastIndexOf('/') + 1) : '';
+              return pre + base + url + post;
+            });
+            articleCache[file] = md; renderArticle(md);
+          })
+          .catch(function() {
+            if (retry < 2) { content.innerHTML = '<p style="text-align:center;color:var(--muted);padding:60px 0;">重试中...</p>'; setTimeout(function() { loadArticle(retry + 1); }, 1000); }
+            else { content.innerHTML = '<p style="color:var(--muted)">加载失败，请刷新重试</p>'; }
           });
-          articleCache[file] = md; renderArticle(md); })
-        .catch(function() { content.innerHTML = '<p style="color:var(--muted)">加载失败，请刷新重试</p>'; });
+      }
+      loadArticle();
     }
     activeId = id;
     navCats.querySelectorAll('.toc-nav-item').forEach(function(el) {
