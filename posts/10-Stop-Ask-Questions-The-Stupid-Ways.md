@@ -11,7 +11,7 @@ Stop-Ask-Questions-The-Stupid-Ways
 
 ## 你真的准备好了吗？
 
-![you-are-not-prepared.png](/images/you-are-not-prepared.png)
+![you-are-not-prepared.png](/posts/images/Stop-Ask-Questions-The-Stupid-Ways/you-are-not-prepared.png)
 
 > 感谢群友 `for you` 提供
 
@@ -49,7 +49,7 @@ Stop-Ask-Questions-The-Stupid-Ways
 谢谢
 ```
 
-![manners-maketh-man.jpg](/images/manners-maketh-man-small.png)
+![manners-maketh-man.jpg](/posts/images/Stop-Ask-Questions-The-Stupid-Ways/manners-maketh-man-small.png)
 
 
 ## 学会描述问题
@@ -74,7 +74,7 @@ Stop-Ask-Questions-The-Stupid-Ways
 
 ### 学会什么时候贴图
 
-![what-time-to-use-image.png](/images/what-time-to-use-image.png)
+![what-time-to-use-image.png](/posts/images/Stop-Ask-Questions-The-Stupid-Ways/what-time-to-use-image.png)
 
 像这种，IM 自动转义表情，贴出来的问题全是表情。
 
@@ -85,7 +85,7 @@ Stop-Ask-Questions-The-Stupid-Ways
 在工作中， 你`@`的人可能会多问一句什么情况。 但是在 IM 聊天群里面，就没有这么好运气了。
 
 
-![stupid_02-conversation.png](/images/stupid_questions/stupid_02-conversation.png)
+![stupid_02-conversation.png](/posts/images/Stop-Ask-Questions-The-Stupid-Ways/stupid_questions/stupid_02-conversation.png)
 
 如下很难吗？
 
@@ -94,21 +94,21 @@ Stop-Ask-Questions-The-Stupid-Ways
 环境是: 环境是什么。
 ```
 
-![stupid_02-no-target.png](/images/stupid_questions/stupid_02-no-target.png)
+![stupid_02-no-target.png](/posts/images/Stop-Ask-Questions-The-Stupid-Ways/stupid_questions/stupid_02-no-target.png)
 
 ### 学会什么时候贴文字
 
 
 ## 什么是弱智一样的提问
 
-![stupid_questions.png](/images/stupid_questions/stupid_questions.png)
+![stupid_questions.png](/posts/images/Stop-Ask-Questions-The-Stupid-Ways/stupid_questions/stupid_questions.png)
 
 ## 萌新滚粗
 
-![baiduit.jpg](/images/baiduit.jpg)
+![baiduit.jpg](/posts/images/Stop-Ask-Questions-The-Stupid-Ways/baiduit.jpg)
 
 | 什么鬼？    | 咋回事？  | 怎么办？    | 救命啊！！       |
 |-------------|-------------|-------------|------------------|
 | 自己 google | 自己 google | 自己 google | 自己 google 了吗 |
 
-![googleit.png](/images/googleit.png)
+![googleit.png](/posts/images/Stop-Ask-Questions-The-Stupid-Ways/googleit.png)
