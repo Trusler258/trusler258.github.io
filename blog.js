@@ -1,9 +1,9 @@
 function toast(msg, color) {
   var el = document.createElement('div');
-  el.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;padding:10px 16px;border-radius:8px;background:'+(color||'#f472b6')+';color:#fff;font-size:12px;font-family:var(--ff);max-width:320px;animation:fadeUp .3s ease;pointer-events:none;';
+  el.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;padding:14px 20px;border-radius:10px;background:' + (color || '#e94560') + ';color:#fff;font-size:14px;font-weight:600;max-width:380px;line-height:1.5;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4);white-space:pre-wrap;border:1px solid rgba(255,255,255,.15);';
   el.textContent = msg;
   document.body.appendChild(el);
-  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(function(){ el.remove(); },300); },3000);
+  setTimeout(function(){ el.style.transition = 'opacity .4s, transform .4s'; el.style.opacity = '0'; el.style.transform = 'translateX(20px)'; setTimeout(function(){ el.remove(); }, 400); }, 5000);
 }
 
 function renderMarkdown(md) {
