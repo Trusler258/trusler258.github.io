@@ -1,0 +1,64 @@
+{
+  "categories": [
+    {
+      "name": "复盘",
+      "items": [
+        {
+          "id": 2,
+          "title": "大数据省赛全流程复盘",
+          "file": "02-bigdata.md"
+        }
+      ]
+    },
+    {
+      "name": "技术",
+      "items": [
+        {
+          "id": 0,
+          "title": "Markdown 入门指南",
+          "file": "00-markdown.md"
+        },
+        {
+          "id": 1,
+          "title": "Linux 命令速查手册",
+          "file": "01-linux.md"
+        }
+      ]
+    },
+    {
+      "name": "教学",
+      "items": [
+        {
+          "id": 3,
+          "title": "Python 入门教程",
+          "file": "03-python.md"
+        },
+        {
+          "id": 4,
+          "title": "Java 入门教程",
+          "file": "04-java.md"
+        },
+        {
+          "id": 5,
+          "title": "C++ 入门教程",
+          "file": "05-cpp.md"
+        },
+        {
+          "id": 6,
+          "title": "JavaScript 入门教程",
+          "file": "06-javascript.md"
+        },
+        {
+          "id": 7,
+          "title": "Vim / Nano 编辑器实战",
+          "file": "07-vim-nano.md"
+        },
+        {
+          "id": 8,
+          "title": "代码风格与规范",
+          "file": "08-code-style.md"
+        }
+      ]
+    }
+  ]
+}
