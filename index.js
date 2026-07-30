@@ -128,12 +128,10 @@
       var fy = 1 - dy * dy;
       var rx = -dy * max * fx;
       var ry = dx * max * fy;
-      c.style.transition = 'transform .18s linear';
       c.style.transform = 'translateZ(' + z + ') rotateX(' + rx.toFixed(1) + 'deg) rotateY(' + ry.toFixed(1) + 'deg)';
     });
 
     c.addEventListener('mouseleave', function() {
-      c.style.transition = 'transform .5s ease-out';
       c.style.transform = 'translateZ(' + z + ') rotateX(0deg) rotateY(0deg)';
     });
   });

@@ -104,7 +104,7 @@ main {
   border-radius: 16px; padding: 30px;
   text-align: center; position: relative;
   transform-style: preserve-3d;
-  transition: transform .5s ease-out, box-shadow .5s ease-out;
+  transition: transform .2s ease-out;
 }
 .profile-card::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
@@ -174,7 +174,7 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 24px;
   position: relative;
-  transition: border-color .3s, box-shadow .3s, transform .5s ease-out;
+  transition: border-color .3s, box-shadow .3s, transform .2s ease-out;
   transform-style: preserve-3d;
 }
 .card:hover {
