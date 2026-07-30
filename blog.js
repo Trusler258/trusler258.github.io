@@ -3,6 +3,11 @@ function renderMarkdown(md) {
   var html = '';
   var inCodeBlock = false, codeContent = '', codeLang = '';
   var inTable = false, tableHtml = '';
+  var headingCount = {};
+
+  function slug(text) {
+    return text.toLowerCase().replace(/[^\w\u4e00-\u9fff]+/g, '-').replace(/^-|-$/g, '');
+  }
 
   function parseInline(text) {
     text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -57,7 +62,9 @@ function renderMarkdown(md) {
 
     if (line.match(/^#{1,6}\s/)) {
       var level = line.match(/^(#{1,6})/)[1].length;
-      html += '<h' + level + '>' + parseInline(line.replace(/^#{1,6}\s*/, '')) + '</h' + level + '>';
+      var title = parseInline(line.replace(/^#{1,6}\s*/, ''));
+      var id = slug(title) || 'h-' + (headingCount[level] = (headingCount[level] || 0) + 1);
+      html += '<h' + level + ' id="' + id + '">' + title + '</h' + level + '>';
       continue;
     }
 
@@ -138,15 +145,35 @@ function addCopyButtons(container) {
   });
 }
 
+function buildTOC(container) {
+  var toc = document.getElementById('tocList');
+  var navToc = document.getElementById('navToc');
+  if (!toc || !navToc) return;
+  var headings = container.querySelectorAll('h1, h2, h3');
+  if (headings.length === 0) { navToc.style.display = 'none'; return; }
+  navToc.style.display = '';
+  toc.innerHTML = '';
+  headings.forEach(function(h) {
+    var a = document.createElement('a');
+    a.className = 'toc-link toc-' + h.tagName.toLowerCase();
+    a.href = '#' + h.id;
+    a.textContent = h.textContent;
+    a.addEventListener('click', function(e) {
+      e.preventDefault();
+      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    toc.appendChild(a);
+  });
+}
+
 var articleCache = {};
 var fileMap = {};
 var categories = [];
 
 (function() {
   var navCats = document.getElementById('navCats');
-  var navList = document.getElementById('navList');
   var content = document.getElementById('articleContent');
-  var activeCat = 0;
+  var activeId = null;
 
   function renderArticle(md) {
     content.innerHTML = renderMarkdown(md);
@@ -154,14 +181,15 @@ var categories = [];
       content.querySelectorAll('pre code').forEach(function(el) { hljs.highlightElement(el); });
     }
     addCopyButtons(content);
+    buildTOC(content);
     content.style.animation = 'none';
     content.offsetHeight;
     content.style.animation = 'fadeUp .4s ease both';
   }
 
-  function showArticle(idx) {
+  function showArticle(id) {
     window.scrollTo(0, 0);
-    var file = fileMap[idx];
+    var file = fileMap[id];
     if (!file) { content.innerHTML = '<p style="color:var(--muted)">文章未找到</p>'; return; }
     if (articleCache[file]) { renderArticle(articleCache[file]); }
     else {
@@ -171,41 +199,52 @@ var categories = [];
         .then(function(md) { articleCache[file] = md; renderArticle(md); })
         .catch(function() { content.innerHTML = '<p style="color:var(--muted)">加载失败，请刷新重试</p>'; });
     }
-    var items = document.querySelectorAll('.blog-nav-item');
-    items.forEach(function(item) {
-      item.classList.toggle('active', parseInt(item.getAttribute('data-idx')) === idx);
+    activeId = id;
+    navCats.querySelectorAll('.toc-nav-item').forEach(function(el) {
+      el.classList.toggle('active', parseInt(el.getAttribute('data-id')) === id);
     });
-  }
-
-  function renderList() {
-    navList.innerHTML = '';
-    categories[activeCat].items.forEach(function(a) {
-      var b = document.createElement('button');
-      b.className = 'blog-nav-item';
-      b.setAttribute('data-idx', a.id);
-      b.textContent = a.title;
-      b.addEventListener('click', function() { showArticle(a.id); });
-      navList.appendChild(b);
-    });
-    if (categories[activeCat].items.length > 0) {
-      showArticle(categories[activeCat].items[0].id);
-    }
   }
 
   function renderCats() {
     navCats.innerHTML = '';
-    categories.forEach(function(cat, i) {
-      var b = document.createElement('button');
-      b.className = 'blog-cat' + (i === 0 ? ' active' : '');
-      b.textContent = cat.name;
-      b.addEventListener('click', function() {
-        activeCat = i;
-        navCats.querySelectorAll('.blog-cat').forEach(function(btn) { btn.classList.remove('active'); });
-        b.classList.add('active');
-        renderList();
+    categories.forEach(function(cat) {
+      var section = document.createElement('div');
+      section.className = 'toc-section';
+
+      var head = document.createElement('button');
+      head.className = 'toc-section-head';
+      head.innerHTML = cat.name + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+      
+      var body = document.createElement('div');
+      body.className = 'toc-section-body';
+
+      cat.items.forEach(function(item) {
+        var a = document.createElement('a');
+        a.className = 'toc-nav-item';
+        a.setAttribute('data-id', item.id);
+        a.textContent = item.title;
+        a.addEventListener('click', function() { showArticle(item.id); });
+        body.appendChild(a);
       });
-      navCats.appendChild(b);
+
+      head.addEventListener('click', function() {
+        var open = section.classList.toggle('open');
+        head.querySelector('svg').style.transform = open ? 'rotate(180deg)' : '';
+      });
+
+      section.appendChild(head);
+      section.appendChild(body);
+      navCats.appendChild(section);
     });
+
+    // Expand first category
+    var first = navCats.querySelector('.toc-section');
+    if (first) { first.classList.add('open'); first.querySelector('svg').style.transform = 'rotate(180deg)'; }
+
+    // Open first article
+    if (categories[0] && categories[0].items[0]) {
+      showArticle(categories[0].items[0].id);
+    }
   }
 
   fetch('posts/index.json')
@@ -213,12 +252,9 @@ var categories = [];
     .then(function(data) {
       categories = data.categories;
       data.categories.forEach(function(cat) {
-        cat.items.forEach(function(item) {
-          fileMap[item.id] = item.file;
-        });
+        cat.items.forEach(function(item) { fileMap[item.id] = item.file; });
       });
       renderCats();
-      renderList();
     })
     .catch(function() {
       if (navCats) navCats.innerHTML = '<span style="color:var(--muted)">加载目录失败</span>';

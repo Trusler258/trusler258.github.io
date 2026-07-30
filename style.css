@@ -326,24 +326,47 @@ footer b { color: var(--text); }
 .blog-back:hover { color: var(--highlight); }
 .blog-back svg { flex: none; }
 
-.blog-cats {
-  display: flex; gap: 6px; margin-bottom: 12px; padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
+.blog-cats { display: none; }
+
+.toc-section { margin-bottom: 2px; }
+.toc-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 10px 12px; border: none; border-radius: 8px;
+  background: transparent; color: var(--soft); font-size: 13px;
+  font-family: var(--fd); font-weight: 600; cursor: pointer;
+  transition: all .2s; text-align: left;
 }
-.blog-cat {
-  flex: 1; padding: 8px 4px; border-radius: 8px;
-  background: transparent; border: 1px solid var(--border);
-  color: var(--soft); font-size: 12px; cursor: pointer;
-  font-family: var(--fd); font-weight: 600; transition: all .2s;
+.toc-section-head:hover { background: rgba(103,232,249,.04); color: var(--text); }
+.toc-section-head svg { transition: transform .25s; flex: none; opacity: .5; }
+.toc-section-body {
+  display: none; padding: 2px 0 6px 4px;
+  border-left: 1px solid var(--border); margin-left: 8px;
 }
-.blog-cat:hover { color: var(--text); border-color: rgba(103,232,249,.3); }
-.blog-cat.active {
-  background: rgba(103,232,249,.1); border-color: rgba(103,232,249,.4);
+.toc-section.open .toc-section-body { display: block; }
+
+.toc-nav-item {
+  display: block; width: 100%; text-align: left;
+  padding: 7px 10px; margin-bottom: 2px;
+  background: transparent; border: 1px solid transparent;
+  border-radius: 6px; color: var(--soft);
+  font-size: 12px; cursor: pointer;
+  transition: all .15s; font-family: inherit;
+  text-decoration: none;
+}
+.toc-nav-item:hover { background: rgba(103,232,249,.05); color: var(--text); }
+.toc-nav-item.active {
+  background: rgba(103,232,249,.08); border-color: rgba(103,232,249,.15);
   color: var(--highlight);
 }
-.blog-nav-list { max-height: 58vh; overflow-y: auto; }
-.blog-nav-list::-webkit-scrollbar { width: 4px; }
-.blog-nav-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.toc-link {
+  display: block; padding: 3px 0; font-size: 11px;
+  color: var(--muted); text-decoration: none;
+  transition: color .15s; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toc-link:hover { color: var(--highlight); }
+.toc-h3 { padding-left: 16px; }
 
 .callout {
   border-radius: 8px; padding: 12px 16px; margin: 14px 0;
