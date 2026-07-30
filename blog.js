@@ -189,7 +189,7 @@ var categories = [];
 
   function showArticle(id) {
     window.scrollTo(0, 0);
-    if (history.replaceState) history.replaceState(null, '', '?id=' + id);
+    if (window.history && history.pushState) history.pushState(null, '', '?id=' + id);
     var file = fileMap[id];
     if (!file) { content.innerHTML = '<p style="color:var(--muted)">文章未找到</p>'; return; }
     if (articleCache[file]) { renderArticle(articleCache[file]); }
