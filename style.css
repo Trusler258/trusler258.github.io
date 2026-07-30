@@ -89,7 +89,7 @@ body {
 
 main {
   flex: 1; display: flex;
-  max-width: 1200px; margin: 40px auto;
+  max-width: 1200px; margin: 80px auto 40px;
   width: 95%; gap: 100px;
   align-items: flex-start;
   position: relative; z-index: 1;
