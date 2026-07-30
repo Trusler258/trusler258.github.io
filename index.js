@@ -113,8 +113,8 @@
   }, 1500);
 
   cards.forEach(function(c) {
-    var max = c.classList.contains('profile-card') ? 12 : 8;
-    var z = c.classList.contains('profile-card') ? '40px' : '20px';
+    var max = c.classList.contains('profile-card') ? 18 : 12;
+    var z = c.classList.contains('profile-card') ? '60px' : '35px';
 
     c.addEventListener('mousemove', function(e) {
       var rect = c.getBoundingClientRect();
@@ -126,7 +126,7 @@
       dy = Math.max(-1, Math.min(1, dy));
       var rx = -dy * max;
       var ry = dx * max;
-      c.style.transition = 'transform .08s linear';
+      c.style.transition = 'transform .12s linear';
       c.style.transform = 'translateZ(' + z + ') rotateX(' + rx.toFixed(1) + 'deg) rotateY(' + ry.toFixed(1) + 'deg)';
     });
 
