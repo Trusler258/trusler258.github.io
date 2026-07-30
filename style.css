@@ -287,8 +287,8 @@ footer b { color: var(--text); }
 
 .blog-layout {
   flex: 1; display: flex;
-  max-width: 1100px; margin: 40px auto 20px;
-  width: 95%; gap: 24px;
+  max-width: 1280px; margin: 40px auto 20px;
+  width: 95%; gap: 20px;
   align-items: flex-start;
   position: relative; z-index: 1;
 }
