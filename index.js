@@ -108,36 +108,29 @@
   var cards = main.querySelectorAll('.profile-card, .card');
   if (!cards.length) return;
 
-  var baseDepths = {};
-  cards.forEach(function(c, i) {
-    var z = window.getComputedStyle(c).getPropertyValue('--card-z');
-    baseDepths[c.dataset.cid || i] = z.trim() || '0px';
-    if (!c.dataset.cid) c.dataset.cid = i;
-  });
-
   document.addEventListener('mousemove', function(e) {
     cards.forEach(function(c) {
       var rect = c.getBoundingClientRect();
       var cx = rect.left + rect.width / 2;
       var cy = rect.top + rect.height / 2;
-      var dx = (e.clientX - cx) / rect.width;
-      var dy = (e.clientY - cy) / rect.height;
-      var dist = Math.sqrt(dx * dx + dy * dy);
-      var factor = Math.max(0, 1 - dist * 1.5);
-      var tilt = 10 * factor;
-      var rx = -dy * tilt;
-      var ry = dx * tilt;
-      var z = baseDepths[c.dataset.cid] || '0px';
+      var dx = (e.clientX - cx) / (rect.width / 2);
+      var dy = (e.clientY - cy) / (rect.height / 2);
+      dx = Math.max(-1, Math.min(1, dx));
+      dy = Math.max(-1, Math.min(1, dy));
+      var max = c.classList.contains('profile-card') ? 12 : 8;
+      var rx = -dy * max;
+      var ry = dx * max;
+      var z = c.classList.contains('profile-card') ? '40px' : '20px';
       c.style.transition = 'none';
-      c.style.transform = 'translateZ(' + z + ') rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+      c.style.transform = 'translateZ(' + z + ') rotateX(' + rx.toFixed(1) + 'deg) rotateY(' + ry.toFixed(1) + 'deg)';
     });
   });
 
   document.addEventListener('mouseleave', function() {
     cards.forEach(function(c) {
-      var z = baseDepths[c.dataset.cid] || '0px';
+      var z = c.classList.contains('profile-card') ? '40px' : '20px';
       c.style.transition = 'transform .5s ease-out';
-      c.style.transform = 'translateZ(' + z + ') rotateX(0) rotateY(0)';
+      c.style.transform = 'translateZ(' + z + ') rotateX(0deg) rotateY(0deg)';
     });
   });
 })();
