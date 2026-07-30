@@ -1,3 +1,11 @@
+function toast(msg, color) {
+  var el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;padding:10px 16px;border-radius:8px;background:'+(color||'#f472b6')+';color:#fff;font-size:12px;font-family:var(--ff);max-width:320px;animation:fadeUp .3s ease;pointer-events:none;';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(function(){ el.remove(); },300); },3000);
+}
+
 function renderMarkdown(md) {
   var lines = md.split('\n');
   var html = '';
@@ -215,9 +223,8 @@ var categories = [];
             articleCache[file] = md; renderArticle(md);
           })
           .catch(function(err) {
-            console.error('Fetch error for ' + file + ':', err);
-            if (retry < 2) { content.innerHTML = '<p style="text-align:center;color:var(--muted);padding:60px 0;">重试中...</p>'; setTimeout(function() { loadArticle(retry + 1); }, 800); }
-            else { content.innerHTML = '<p style="color:var(--muted)">加载失败，请刷新重试</p>'; }
+            if (retry < 2) { setTimeout(function() { loadArticle(retry + 1); }, 800); }
+            else { toast('加载失败: ' + (err.message || err) + '\n文件: ' + file, '#f472b6'); }
           });
       }
       loadArticle();
