@@ -96,7 +96,7 @@ main {
   transform-style: preserve-3d;
 }
 
-.sidebar { width: 320px; flex: none; position: sticky; top: 40px; animation: fadeUp .6s ease both; }
+.sidebar { width: 320px; flex: none; position: sticky; top: 40px; animation: fadeUp .6s ease both; transform-style: preserve-3d; }
 .profile-card {
   --card-z: 40px;
   transform: translateZ(var(--card-z));
@@ -162,7 +162,7 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
   font-weight: 600;
 }
 
-.content-area { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.content-area { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; transform-style: preserve-3d; }
 .content-area > .card { animation: fadeUp .6s ease both; }
 .content-area > .card:nth-child(1) { animation-delay: .1s; }
 .content-area > .card:nth-child(2) { animation-delay: .2s; }
@@ -207,7 +207,7 @@ h1 { font-family: var(--fd); font-size: 22px; font-weight: 700; margin-bottom: 4
 }
 .dot { width: 10px; height: 10px; border-radius: 50%; }
 .dot.r { background: #ff5f6d; } .dot.y { background: #ffe259; } .dot.g { background: #3ddc84; }
-.term-body { padding: 16px; color: #a0a0c0; line-height: 1.8; min-height: 150px; }
+.term-body { padding: 16px; color: #a0a0c0; line-height: 1.8; min-height: 180px; }
 .term-body .line { min-height: 1.8em; }
 .cmd { color: var(--ok); }
 .arg { color: var(--highlight); }
