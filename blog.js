@@ -189,6 +189,7 @@ var categories = [];
 
   function showArticle(id) {
     window.scrollTo(0, 0);
+    if (history.replaceState) history.replaceState(null, '', '?id=' + id);
     var file = fileMap[id];
     if (!file) { content.innerHTML = '<p style="color:var(--muted)">文章未找到</p>'; return; }
     if (articleCache[file]) { renderArticle(articleCache[file]); }
@@ -244,12 +245,22 @@ var categories = [];
       navCats.appendChild(section);
     });
 
-    // Expand first category
+    // Expand first category by default, then check URL
     var first = navCats.querySelector('.toc-section');
     if (first) { first.classList.add('open'); first.querySelector('svg').style.transform = 'rotate(180deg)'; }
 
-    // Open first article
-    if (categories[0] && categories[0].items[0]) {
+    var paramId = null;
+    var m = location.search.match(/[?&]id=(\d+)/);
+    if (m) paramId = parseInt(m[1]);
+
+    if (paramId !== null && fileMap[paramId]) {
+      // Expand the category containing this article
+      navCats.querySelectorAll('.toc-section').forEach(function(sec) {
+        var has = sec.querySelector('[data-id="' + paramId + '"]');
+        if (has) { sec.classList.add('open'); sec.querySelector('svg').style.transform = 'rotate(180deg)'; }
+      });
+      showArticle(paramId);
+    } else if (categories[0] && categories[0].items[0]) {
       showArticle(categories[0].items[0].id);
     }
   }
