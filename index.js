@@ -124,11 +124,11 @@
       var dy = (e.clientY - cy) / (rect.height / 2);
       dx = Math.max(-1, Math.min(1, dx));
       dy = Math.max(-1, Math.min(1, dy));
-      var fx = 1 - Math.abs(dx);
-      var fy = 1 - Math.abs(dy);
+      var fx = 1 - dx * dx;
+      var fy = 1 - dy * dy;
       var rx = -dy * max * fx;
       var ry = dx * max * fy;
-      c.style.transition = 'transform .12s linear';
+      c.style.transition = 'transform .18s linear';
       c.style.transform = 'translateZ(' + z + ') rotateX(' + rx.toFixed(1) + 'deg) rotateY(' + ry.toFixed(1) + 'deg)';
     });
 
