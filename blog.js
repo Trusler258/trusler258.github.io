@@ -16,7 +16,7 @@ function renderMarkdown(md) {
     text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
     text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
     text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-    text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:6px;">');
+    text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" style="max-width:100%;border-radius:6px;">');
     return text;
   }
 
